@@ -1,0 +1,3299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="ProjectPilot - price proposals, planned budgets, WBS scheduling, income and cash flow tracking. Runs fully offline in your browser.">
+<meta name="theme-color" content="#1B4378">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='11' fill='%231B4378'/%3E%3Cpath d='M24 8 11 15v11c0 8.4 5.6 14.4 13 17.5 7.4-3.1 13-9.1 13-17.5V15L24 8z' fill='none' stroke='white' stroke-width='2.6' stroke-linejoin='round'/%3E%3Cpath d='M18.5 25l4.2 4.2L30 21' fill='none' stroke='white' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<title>ProjectPilot - Pricing, Budget &amp; Task Management</title>
+<style>
+    /* ============ Design tokens ============ */
+    :root {
+        --primary: #2C5282;
+        --primary-dark: #1A365D;
+        --accent: #ED8936;
+        --success: #38A169;
+        --danger: #E53E3E;
+        --bg-main: #EFF3F9;
+        --bg-card: #FFFFFF;
+        --text-primary: #1A202C;
+        --text-secondary: #5A6577;
+        --border: #E2E8F2;
+        --input-bg: #EEF2F8;
+        --radius: 14px;
+        --shadow-sm: 0 1px 2px rgba(16,24,40,0.05);
+        --shadow: 0 1px 3px rgba(16,24,40,0.06), 0 8px 20px -8px rgba(16,24,40,0.12);
+        --shadow-lg: 0 18px 40px -14px rgba(16,40,90,0.45);
+        --font: Inter, "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+        --font-num: var(--font);
+        --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+
+    body {
+        font-family: var(--font);
+        font-variant-numeric: tabular-nums;
+        background:
+            radial-gradient(900px 380px at 85% -80px, rgba(43,108,176,0.16), transparent 70%),
+            radial-gradient(700px 320px at -5% 0, rgba(237,137,54,0.10), transparent 70%),
+            var(--bg-main);
+        color: var(--text-primary);
+        line-height: 1.55;
+        min-height: 100vh;
+        padding: 1.25rem 1rem 2rem;
+    }
+
+    .container { max-width: 1500px; margin: 0 auto; }
+
+    :focus-visible { outline: 3px solid rgba(66,153,225,0.55); outline-offset: 2px; border-radius: 6px; }
+
+    .ico { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: 0 0 auto; }
+
+    /* ============ Header ============ */
+    .header {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(120deg, #0F2447 0%, #1B4378 55%, #2B6CB0 100%);
+        color: #fff;
+        border-radius: 20px;
+        padding: 1.4rem 1.75rem;
+        margin-bottom: 1rem;
+        box-shadow: var(--shadow-lg);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem 1.5rem;
+    }
+    .header::before {
+        content: "";
+        position: absolute; inset: 0; pointer-events: none;
+        background:
+            radial-gradient(520px 230px at 100% 0, rgba(255,255,255,0.16), transparent 62%),
+            radial-gradient(380px 200px at 0 120%, rgba(237,137,54,0.28), transparent 62%);
+    }
+    .header::after {
+        content: "";
+        position: absolute; right: -40px; bottom: -70px; width: 240px; height: 240px; border-radius: 50%;
+        border: 38px solid rgba(255,255,255,0.05); pointer-events: none;
+    }
+    .header > * { position: relative; z-index: 1; }
+    .brand-block { display: flex; align-items: center; gap: 1rem; min-width: 0; }
+    .header h1 { font-size: clamp(1.3rem, 2.6vw, 1.9rem); font-weight: 800; color: #fff; letter-spacing: -0.02em; line-height: 1.2; }
+    .header h1 .tagline { font-weight: 500; color: rgba(255,255,255,0.78); }
+    .header .byline { color: rgba(255,255,255,0.82); font-size: 1rem; font-style: italic; font-weight: 500; margin-top: 0.2rem; }
+
+    .logo-badge {
+        flex-shrink: 0; width: 58px; height: 58px; border-radius: 17px;
+        background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.3);
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 8px 18px -8px rgba(0,0,0,0.5);
+    }
+
+    .header-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; }
+    .save-indicator { font-size: 0.8rem; color: rgba(255,255,255,0.92); display: flex; align-items: center; gap: 0.45rem; background: rgba(255,255,255,0.13); padding: 0.35rem 0.8rem; border-radius: 999px; }
+    .save-dot { width: 8px; height: 8px; border-radius: 50%; background: #68D391; box-shadow: 0 0 0 3px rgba(104,211,145,0.3); }
+
+    /* ============ Tabs ============ */
+    .tabs {
+        position: sticky; top: 0.5rem; z-index: 40;
+        display: flex; gap: 0.25rem;
+        background: rgba(255,255,255,0.92);
+        backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 0.35rem;
+        margin-bottom: 1rem;
+        box-shadow: var(--shadow);
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+        flex: 1 0 auto;
+        display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+        padding: 0.65rem 1rem;
+        border: none; background: transparent; border-radius: 12px;
+        font-weight: 600; font-size: 0.9rem; font-family: inherit;
+        color: var(--text-secondary);
+        cursor: pointer; white-space: nowrap;
+        transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .tab-btn:hover { background: var(--input-bg); color: var(--primary-dark); }
+    .tab-btn.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; box-shadow: 0 6px 14px -6px rgba(26,54,93,0.65); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeIn 0.28s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ============ Key figures strip ============ */
+    .key-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; margin-bottom: 1.25rem; }
+    .key-stat { display: flex; align-items: center; gap: 0.8rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7rem 0.95rem; box-shadow: var(--shadow-sm); min-width: 0; }
+    .key-ico { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; flex: 0 0 auto; }
+    .key-ico.blue { background: #E4EDFA; color: #2C5282; }
+    .key-ico.orange { background: #FFEEDB; color: #C05621; }
+    .key-ico.red { background: #FDE8E8; color: #C53030; }
+    .key-ico.green { background: #E0F5E8; color: #2F855A; }
+    .key-label { display: block; font-size: 0.66rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; }
+    .key-value { display: block; font-size: 1.1rem; font-weight: 750; color: var(--primary-dark); line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .key-sub { display: block; font-size: 0.72rem; color: var(--text-secondary); }
+    .key-value.neg { color: var(--danger); }
+
+    /* ============ Layout ============ */
+    .grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 1.5rem; margin-bottom: 1.5rem; align-items: start; }
+    .grid-equal { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .grid > *, .two-col-grid > *, .form-grid > * { min-width: 0; }
+
+    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.4rem 1.5rem; box-shadow: var(--shadow); margin-bottom: 1.25rem; }
+
+    .card-header {
+        display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6rem 1rem;
+        margin-bottom: 1.1rem; padding-bottom: 0.85rem; border-bottom: 1px solid var(--border);
+    }
+    .card-title { font-size: 1.15rem; font-weight: 700; color: var(--primary-dark); letter-spacing: -0.01em; }
+    .card-subtitle { font-size: 0.84rem; color: var(--text-secondary); margin-top: 0.2rem; max-width: 70ch; }
+
+    /* ============ Buttons ============ */
+    .btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem;
+        padding: 0.55rem 1rem; border: 1px solid transparent; border-radius: 10px;
+        font-weight: 600; font-size: 0.86rem; font-family: inherit; cursor: pointer; white-space: nowrap;
+        transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; box-shadow: 0 4px 10px -4px rgba(26,54,93,0.6); }
+    .btn-primary:hover { box-shadow: 0 6px 14px -4px rgba(26,54,93,0.7); filter: brightness(1.08); }
+    .btn-secondary { background: linear-gradient(135deg, #F29A4B, #DD6B20); color: #fff; box-shadow: 0 4px 10px -4px rgba(221,107,32,0.6); }
+    .btn-secondary:hover { filter: brightness(1.06); }
+    .btn-success { background: linear-gradient(135deg, #48B27C, #2F855A); color: #fff; box-shadow: 0 4px 10px -4px rgba(47,133,90,0.6); }
+    .btn-success:hover { filter: brightness(1.07); }
+    .btn-outline { background: #fff; color: var(--primary); border-color: #C3D2E8; }
+    .btn-outline:hover { background: #F1F6FD; border-color: var(--primary); }
+    .btn-danger { background: #fff; color: #C53030; border-color: #F3BDBD; }
+    .btn-danger:hover { background: #FFF1F1; border-color: #E53E3E; }
+    .btn-ghost { background: rgba(255,255,255,0.13); color: #fff; border-color: rgba(255,255,255,0.32); }
+    .btn-ghost:hover { background: rgba(255,255,255,0.24); }
+    .btn-sm { padding: 0.42rem 0.8rem; font-size: 0.8rem; }
+
+    /* ============ Forms ============ */
+    .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1rem; }
+    .form-group { margin-bottom: 0.25rem; }
+    .form-label { display: block; margin-bottom: 0.35rem; font-weight: 600; color: var(--text-primary); font-size: 0.8rem; }
+
+    .form-input, .form-select {
+        width: 100%; padding: 0.6rem 0.75rem; border: 1px solid #D3DCEA; border-radius: 10px;
+        font-size: 0.92rem; font-family: inherit; background: #fff; color: var(--text-primary);
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .form-input:hover, .form-select:hover { border-color: #B6C4DA; }
+    .form-input:focus, .form-select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(44,82,130,0.16); }
+    .form-input::placeholder { color: #9AA7BB; }
+
+    /* ============ Tables ============ */
+    table.items-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 1rem; font-size: 0.85rem; }
+    .items-table thead th { background: #1F3F6E; color: #fff; }
+    .items-table th { padding: 0.7rem 0.6rem; text-align: left; font-weight: 650; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
+    .items-table th:first-child { border-radius: 10px 0 0 0; }
+    .items-table th:last-child { border-radius: 0 10px 0 0; }
+    .items-table td { padding: 0.5rem 0.55rem; border-bottom: 1px solid #EBF0F7; vertical-align: middle; }
+    .items-table tbody tr:nth-child(even) td { background: #FAFBFE; }
+    .items-table tbody tr:hover td { background: #EFF5FD; }
+    .items-table input, .items-table select { width: 100%; padding: 0.4rem 0.5rem; border: 1px solid #D9E1EE; border-radius: 8px; font-size: 0.85rem; font-family: inherit; background: #fff; color: var(--text-primary); }
+    .items-table input:focus, .items-table select:focus, .items-table textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(44,82,130,0.14); }
+    .items-table input[type="number"] { font-family: var(--font-num); min-width: 80px; }
+    .items-table textarea {
+        width: 100%; min-width: 160px; padding: 0.4rem 0.5rem; border: 1px solid #D9E1EE; border-radius: 8px;
+        font-size: 0.85rem; font-family: inherit; line-height: 1.35; resize: vertical; overflow: hidden; background: #fff;
+    }
+    .items-table .calc-cell { font-family: var(--font-num); font-weight: 650; color: var(--primary-dark); white-space: nowrap; }
+    .items-table .variance-pos { color: #2F855A; }
+    .items-table .variance-neg { color: var(--danger); }
+
+    .pricing-items-table th:nth-child(1), .pricing-items-table td:nth-child(1) { min-width: 80px; }
+    .pricing-items-table th:nth-child(2), .pricing-items-table td:nth-child(2) { min-width: 104px; }
+    .pricing-items-table th:nth-child(3), .pricing-items-table td:nth-child(3) { min-width: 135px; }
+    .pricing-items-table th:nth-child(5), .pricing-items-table td:nth-child(5) { min-width: 105px; }
+    .pricing-items-table th:nth-child(6), .pricing-items-table td:nth-child(6) { min-width: 65px; }
+    .pricing-items-table th:nth-child(7), .pricing-items-table td:nth-child(7) { min-width: 100px; }
+    .pricing-items-table th:nth-child(8), .pricing-items-table td:nth-child(8) { min-width: 160px; }
+
+    .wbs-code { font-family: var(--font-mono); font-weight: 650; font-size: 0.8rem; color: var(--primary-dark); white-space: nowrap; display: inline-block; }
+    .lvl-ctl { display: flex; align-items: center; gap: 0.2rem; }
+    .lvl-ctl button { border: 1px solid #D9E1EE; background: #fff; border-radius: 6px; cursor: pointer; font-size: 0.6rem; padding: 0.25rem 0.32rem; color: var(--primary); }
+    .lvl-ctl button:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .lvl-badge { display: inline-block; min-width: 28px; text-align: center; padding: 0.1rem 0.45rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700; color: #fff; background: #2C5282; }
+    .lvl-badge.lvl2 { background: #3182CE; }
+    .lvl-badge.lvl3 { background: #38A169; }
+    .lvl-badge.lvl4 { background: #D69E2E; }
+    .lvl-badge.lvl5 { background: #DD6B20; }
+    .row-actions { white-space: nowrap; }
+    .mv-btn { border: 1px solid #D9E1EE; background: #fff; border-radius: 6px; cursor: pointer; font-size: 0.65rem; padding: 0.32rem 0.45rem; margin-right: 0.15rem; color: var(--text-secondary); }
+    .mv-btn:hover { background: var(--input-bg); color: var(--primary); }
+
+    .items-table tr.headline-row td { background: linear-gradient(90deg, #E6EFFB, #EDE9F8); border-bottom: 1px solid #B9CBE6; padding-top: 0.6rem; padding-bottom: 0.6rem; }
+    .items-table tr.headline-row:hover td { background: linear-gradient(90deg, #DDE9FA, #E6E0F5); }
+    .items-table tr.headline-row.lvl2 td { background: linear-gradient(90deg, #F2F7FE, #F3F0FA); border-bottom: 1px solid #D3DEEE; }
+    .items-table tr.headline-row.lvl3 td, .items-table tr.headline-row.lvl4 td { background: #F8FAFD; border-bottom: 1px solid var(--border); }
+    .headline-input { width: 100%; border: none !important; background: transparent !important; font-weight: 750; font-size: 0.92rem; color: var(--primary-dark); text-transform: uppercase; letter-spacing: 0.03em; padding: 0.3rem !important; box-shadow: none !important; }
+    .headline-input:focus { outline: none; border-bottom: 2px solid var(--primary) !important; border-radius: 0 !important; }
+    .items-table tr.headline-row.lvl2 .headline-input, .items-table tr.headline-row.lvl3 .headline-input, .items-table tr.headline-row.lvl4 .headline-input { text-transform: none; font-size: 0.9rem; font-weight: 650; }
+    .items-table tr.headline-row .calc-cell { color: var(--primary-dark); font-weight: 750; }
+
+    .risk-cell { display: flex; align-items: center; gap: 0.4rem; flex-wrap: nowrap; }
+    .risk-cell select { width: auto; flex: 1; min-width: 90px; }
+    .risk-cell .badge { flex-shrink: 0; }
+
+    .delete-btn { background: #fff; color: #C53030; border: 1px solid #F3BDBD; padding: 0.3rem 0.6rem; border-radius: 7px; cursor: pointer; font-size: 0.78rem; line-height: 1.2; }
+    .delete-btn:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+
+    /* ============ Summary / assumptions ============ */
+    .summary-grid { display: grid; gap: 0.5rem; }
+    .summary-item { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; padding: 0.6rem 0.8rem; background: var(--input-bg); border-radius: 10px; border-left: 4px solid #C9D4E5; font-size: 0.85rem; }
+    .summary-item.highlight { background: linear-gradient(135deg, #FFF7ED, #FFEBD6); border-left-color: var(--accent); }
+    .summary-item.good { background: linear-gradient(135deg, #F0FBF4, #D5F3E0); border-left-color: var(--success); }
+    .summary-item.bad { background: linear-gradient(135deg, #FFF5F5, #FDE0E0); border-left-color: var(--danger); }
+    .summary-item.total { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; border-left-color: var(--accent); font-size: 0.95rem; font-weight: 700; padding: 0.85rem 0.95rem; box-shadow: 0 8px 18px -10px rgba(26,54,93,0.8); }
+    .summary-label { font-weight: 500; }
+    .summary-value { font-family: var(--font-num); font-weight: 700; font-size: 0.9rem; text-align: right; }
+    .summary-item.total .summary-value { font-size: 1.15rem; }
+
+    .assumptions-grid { display: grid; gap: 0.5rem; }
+    .assumption-item { background: var(--input-bg); padding: 0.5rem 0.8rem; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+    .assumption-label { font-weight: 500; font-size: 0.82rem; }
+    .assumption-input { width: 80px; padding: 0.32rem 0.4rem; border: 1px solid #D3DCEA; border-radius: 8px; font-family: var(--font-num); font-weight: 700; font-size: 0.85rem; text-align: right; background: #fff; }
+    .assumption-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(44,82,130,0.16); }
+
+    .category-item { display: flex; justify-content: space-between; align-items: center; padding: 0.45rem 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+    .category-bar-track { height: 7px; background: #E6ECF5; border-radius: 99px; margin-top: 0.3rem; overflow: hidden; }
+    .category-bar { height: 100%; background: linear-gradient(90deg, #2C5282, #4C8BD8); border-radius: 99px; transition: width 0.4s ease; }
+    .category-bar.over { background: linear-gradient(90deg, #E53E3E, #F27474); }
+
+    .badge { display: inline-block; padding: 0.18rem 0.55rem; border-radius: 999px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+    .badge-low { background: #D5F3E0; color: #22543D; }
+    .badge-medium { background: #FFE3C4; color: #7C2D12; }
+    .badge-high { background: #FDD9D9; color: #742A2A; }
+    .badge-critical { background: #FAC8DC; color: #702459; }
+
+    .info-box { background: #EBF4FE; border: 1px solid #CFE2F8; border-left: 4px solid #3182CE; padding: 0.85rem 1rem; border-radius: 10px; margin-top: 1rem; font-size: 0.84rem; color: #2A4365; }
+    .warn-box { background: #FFF8EE; border: 1px solid #FBDDB5; border-left: 4px solid var(--accent); padding: 0.85rem 1rem; border-radius: 10px; margin-top: 1rem; font-size: 0.84rem; color: #7C2D12; }
+
+    .export-section { display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; }
+
+    /* ============ KPI cards ============ */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
+    .kpi-card { position: relative; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1rem 1.2rem; box-shadow: var(--shadow); overflow: hidden; }
+    .kpi-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--primary); }
+    .kpi-ico { position: absolute; top: 0.95rem; right: 1rem; width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: #E4EDFA; color: var(--primary); }
+    .kpi-card .kpi-label { font-size: 0.72rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.07em; font-weight: 700; padding-right: 3rem; }
+    .kpi-card .kpi-value { font-family: var(--font-num); font-size: clamp(1.25rem, 2.1vw, 1.65rem); font-weight: 750; color: var(--primary-dark); margin-top: 0.3rem; letter-spacing: -0.01em; }
+    .kpi-card .kpi-sub { font-size: 0.78rem; margin-top: 0.25rem; color: var(--text-secondary); }
+    .kpi-card.danger::before { background: var(--danger); }
+    .kpi-card.danger .kpi-ico { background: #FDE8E8; color: #C53030; }
+    .kpi-card.success::before { background: var(--success); }
+    .kpi-card.success .kpi-ico { background: #E0F5E8; color: #2F855A; }
+    .kpi-card.accent::before { background: var(--accent); }
+    .kpi-card.accent .kpi-ico { background: #FFEEDB; color: #C05621; }
+
+    .cashflow-summary-grid { grid-template-columns: repeat(4, 1fr); margin-bottom: 1.25rem; }
+
+    .two-col-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.5rem; margin: 0.5rem 0 1rem; }
+    .chart-title { font-size: 0.92rem; font-weight: 700; color: var(--primary-dark); margin: 1.1rem 0 0.5rem; }
+    .timeline-table input[type="date"] { min-width: 135px; }
+    .timeline-table td:nth-child(2) { min-width: 180px; }
+    .chart-legend { display: flex; gap: 0.4rem 1.25rem; margin-top: 0.5rem; font-size: 0.78rem; flex-wrap: wrap; color: var(--text-secondary); }
+    .chart-legend span { display: flex; align-items: center; gap: 0.4rem; }
+    .chart-legend i { display: inline-block; width: 18px; height: 0; }
+
+    /* ============ New graphics: donut + price build-up ============ */
+    .donut-wrap { display: flex; gap: 1.25rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
+    .donut-wrap svg { width: 168px; height: 168px; flex: 0 0 auto; }
+    .donut-legend { flex: 1; min-width: 190px; display: grid; gap: 0.4rem; font-size: 0.82rem; }
+    .donut-legend .lg { display: flex; align-items: center; gap: 0.55rem; }
+    .donut-legend .sw { width: 11px; height: 11px; border-radius: 4px; flex: 0 0 auto; }
+    .donut-legend .nm { flex: 1; color: var(--text-primary); font-weight: 500; }
+    .donut-legend .vl { font-family: var(--font-num); font-weight: 650; color: var(--primary-dark); }
+    .donut-legend .pc { color: var(--text-secondary); font-size: 0.74rem; min-width: 2.9rem; text-align: right; }
+    .buildup { display: flex; height: 24px; border-radius: 99px; overflow: hidden; background: var(--border); margin: 0.2rem 0 0.7rem; box-shadow: inset 0 1px 2px rgba(16,24,40,0.12); }
+    .buildup span { display: block; height: 100%; transition: width 0.4s ease; }
+    .buildup-legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.35rem 0.9rem; font-size: 0.78rem; }
+    .buildup-legend .lg { display: flex; align-items: center; gap: 0.45rem; }
+    .buildup-legend .sw { width: 10px; height: 10px; border-radius: 3px; flex: 0 0 auto; }
+    .buildup-legend .vl { margin-left: auto; font-weight: 650; color: var(--primary-dark); }
+
+    /* ============ Info modal ============ */
+    .info-btn { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--primary); background: #fff; color: var(--primary); font: italic 700 0.9rem Georgia, serif; cursor: pointer; padding: 0; vertical-align: middle; transition: background 0.15s ease, color 0.15s ease; }
+    .info-btn:hover { background: var(--primary); color: #fff; }
+    .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(15,30,55,0.55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); z-index: 1000; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-backdrop.open { display: flex; }
+    .modal { background: var(--bg-card); border-radius: 18px; max-width: 760px; width: 100%; max-height: 88vh; overflow-y: auto; padding: 1.6rem 1.8rem; box-shadow: 0 30px 70px -20px rgba(0,0,0,0.5); position: relative; animation: fadeIn 0.2s ease; }
+    .modal h2 { color: var(--primary-dark); font-size: 1.35rem; margin-bottom: 0.25rem; padding-right: 2rem; }
+    .modal-close { position: absolute; top: 0.8rem; right: 0.9rem; border: none; background: none; font-size: 1.6rem; cursor: pointer; color: var(--text-secondary); line-height: 1; width: 36px; height: 36px; border-radius: 50%; }
+    .modal-close:hover { color: var(--danger); background: #FDE8E8; }
+    .info-term { border-left: 4px solid var(--primary); background: var(--input-bg); border-radius: 0 10px 10px 0; padding: 0.75rem 0.95rem; margin-top: 0.8rem; }
+    .info-term h3 { font-size: 0.98rem; color: var(--primary-dark); margin-bottom: 0.2rem; }
+    .info-term p { font-size: 0.86rem; color: var(--text-primary); }
+    .info-term .where { font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.3rem; }
+    .info-flow { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; margin: 0.9rem 0 0.2rem; font-size: 0.82rem; font-weight: 600; }
+    .info-flow span.step { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; border-radius: 999px; padding: 0.28rem 0.8rem; }
+    .info-flow span.arrow { color: var(--text-secondary); }
+
+    /* ============ Schedule / misc components ============ */
+    .chip { display: inline-flex; align-items: center; gap: 0.2rem; background: var(--input-bg); border: 1px solid var(--border); border-radius: 999px; padding: 0.1rem 0.2rem 0.1rem 0.6rem; font-size: 0.75rem; margin: 0 0.3rem 0.25rem 0; }
+    .chip button { border: none; background: none; cursor: pointer; color: var(--danger); font-size: 0.95rem; line-height: 1; padding: 0 0.3rem; }
+    .pred-select { width: auto !important; min-width: 150px; max-width: 220px; }
+    .milestone-table td:nth-child(1) { min-width: 200px; }
+    .milestone-table td:nth-child(2) { min-width: 240px; }
+    .dependency-table td:nth-child(2) { min-width: 200px; }
+    .dependency-table td:nth-child(6) { min-width: 240px; }
+    .dependency-table input[type="date"], .milestone-table input[type="date"] { min-width: 135px; }
+    .income-items-table th:nth-child(1), .income-items-table td:nth-child(1) { min-width: 170px; }
+    .income-items-table th:nth-child(7), .income-items-table td:nth-child(7) { min-width: 100px; }
+
+    #ganttChart { background: #fff; scrollbar-width: thin; }
+
+    footer { text-align: center; color: var(--text-secondary); font-size: 0.8rem; margin-top: 1.5rem; padding: 1rem 0 0.5rem; border-top: 1px solid var(--border); }
+
+    .as-options { display: grid; gap: 0.5rem; margin: 0.6rem 0 0.4rem; font-size: 0.88rem; }
+    .as-options label { display: flex; align-items: center; gap: 0.55rem; cursor: pointer; }
+    .as-options input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--primary); flex: 0 0 auto; }
+
+    /* ============ Responsive ============ */
+    @media (min-width: 1101px) {
+        .side-col { position: sticky; top: 4.6rem; align-self: start; max-height: calc(100vh - 5.4rem); overflow-y: auto; scrollbar-width: thin; padding-right: 2px; }
+    }
+    @media (max-width: 1100px) {
+        .grid, .grid-equal { grid-template-columns: minmax(0, 1fr); }
+        .two-col-grid { grid-template-columns: minmax(0, 1fr); }
+    }
+    @media (max-width: 900px) {
+        .form-grid { grid-template-columns: 1fr 1fr; }
+        .key-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .cashflow-summary-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 700px) {
+        body { padding: 0.6rem 0.6rem 1.5rem; }
+        .header { padding: 1.1rem 1.1rem; border-radius: 16px; }
+        .logo-badge { width: 48px; height: 48px; border-radius: 14px; }
+        .header .byline { font-size: 0.9rem; }
+        .header-actions { width: 100%; }
+        .header-actions .btn { flex: 1; }
+        .save-indicator { width: 100%; justify-content: center; }
+        .tabs { top: 0.3rem; border-radius: 14px; }
+        .tab-btn { padding: 0.6rem 0.8rem; font-size: 0.84rem; }
+        .card { padding: 1rem 0.95rem; border-radius: 12px; }
+        .card-title { font-size: 1.05rem; }
+        .modal { padding: 1.25rem 1.1rem; }
+        .form-input, .form-select { font-size: 16px; }
+        .btn { min-height: 38px; white-space: normal; text-align: center; }
+        .export-section .btn { flex: 1 1 100%; }
+        .donut-wrap { justify-content: center; }
+    }
+    @media (max-width: 560px) {
+        .form-grid { grid-template-columns: 1fr; }
+        .cashflow-summary-grid { grid-template-columns: 1fr; }
+        .key-stat { padding: 0.6rem 0.7rem; gap: 0.6rem; }
+        .key-ico { width: 32px; height: 32px; border-radius: 10px; }
+        .key-value { font-size: 0.98rem; }
+        .modal-backdrop { align-items: flex-end; padding: 0; }
+        .modal { border-radius: 18px 18px 0 0; max-height: 92vh; }
+        .buildup-legend { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+    }
+
+    /* ============ Print ============ */
+    @media print {
+        body { background: #fff; padding: 0; }
+        .tabs, .header-actions, .export-section, .btn, .delete-btn, .key-strip, .info-btn, .mv-btn, .lvl-ctl button { display: none !important; }
+        .header { background: none; color: #000; box-shadow: none; border: 1px solid #ccc; }
+        .header::before, .header::after { display: none; }
+        .header h1, .header h1 .tagline, .header .byline { color: #000; }
+        .logo-badge { background: #1B4378; }
+        .tab-panel { display: block !important; }
+        .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+        * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute; width:0; height:0; overflow:hidden;" aria-hidden="true" focusable="false">
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".6" fill="currentColor"/></symbol>
+    <symbol id="i-table" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M3 15h18M12 3v18"/></symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></symbol>
+    <symbol id="i-gantt" viewBox="0 0 24 24"><path d="M10 6h8M12 16h6M3 3v16a2 2 0 0 0 2 2h16M8 11h7"/></symbol>
+    <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8M12 17.5v-11"/></symbol>
+    <symbol id="i-dash" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></symbol>
+    <symbol id="i-trend" viewBox="0 0 24 24"><path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/></symbol>
+    <symbol id="i-percent" viewBox="0 0 24 24"><path d="M19 5 5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+    <symbol id="i-cash" viewBox="0 0 24 24"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12l4 4 4-4"/></symbol>
+    <symbol id="i-save" viewBox="0 0 24 24"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7M7 3v4a1 1 0 0 0 1 1h7"/></symbol>
+    <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4M22 5h-4M4 17v2M5 18H3"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></symbol>
+</svg>
+<noscript><div style="max-width:640px; margin:2rem auto; padding:1rem 1.25rem; background:#fff; border-radius:12px; border:1px solid #E2E8F2;">ProjectPilot needs JavaScript enabled in your browser to work.</div></noscript>
+<div class="container">
+    <header class="header">
+        <div class="brand-block">
+            <div class="logo-badge">
+                <svg viewBox="0 0 48 48" width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M24 6L9 14v12c0 9.6 6.4 16.4 15 20 8.6-3.6 15-10.4 15-20V14L24 6z" stroke="white" stroke-width="2.5" stroke-linejoin="round"/>
+                    <path d="M18 24.5l4.2 4.2L31 19.5" stroke="white" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div>
+                <h1><span class="brand">ProjectPilot</span><span class="tagline"> - Pricing, Budget &amp; Task Management</span></h1>
+                <p class="byline">Powered by Amit Epstein</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <span class="save-indicator" role="status" aria-live="polite"><span class="save-dot" id="saveDot"></span><span id="saveText">Saved locally</span></span>
+            <button class="btn btn-ghost btn-sm" onclick="exportProjectJSON()"><svg class="ico" aria-hidden="true"><use href="#i-save"/></svg>Save Project File As...</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('importFile').click()"><svg class="ico" aria-hidden="true"><use href="#i-folder"/></svg>Load Project File</button>
+            <input type="file" id="importFile" accept=".json" style="display:none" onchange="importProjectJSON(event)">
+        </div>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Sections">
+        <button class="tab-btn active" role="tab" id="tabbtn-pricing" aria-selected="true" aria-controls="tab-pricing" data-tab="pricing" onclick="switchTab('pricing')"><svg class="ico" aria-hidden="true"><use href="#i-tag"/></svg><span>Pricing &amp; Planned Budget</span></button>
+        <button class="tab-btn" role="tab" id="tabbtn-pricingSummary" aria-selected="false" aria-controls="tab-pricingSummary" data-tab="pricingSummary" onclick="switchTab('pricingSummary')"><svg class="ico" aria-hidden="true"><use href="#i-table"/></svg><span>Pricing Summary</span></button>
+        <button class="tab-btn" role="tab" id="tabbtn-budget" aria-selected="false" aria-controls="tab-budget" data-tab="budget" onclick="switchTab('budget')"><svg class="ico" aria-hidden="true"><use href="#i-wallet"/></svg><span>Budget: Plan vs Actual</span></button>
+        <button class="tab-btn" role="tab" id="tabbtn-schedule" aria-selected="false" aria-controls="tab-schedule" data-tab="schedule" onclick="switchTab('schedule')"><svg class="ico" aria-hidden="true"><use href="#i-gantt"/></svg><span>Schedule (Gantt)</span></button>
+        <button class="tab-btn" role="tab" id="tabbtn-income" aria-selected="false" aria-controls="tab-income" data-tab="income" onclick="switchTab('income')"><svg class="ico" aria-hidden="true"><use href="#i-receipt"/></svg><span>Income &amp; Revenue</span></button>
+        <button class="tab-btn" role="tab" id="tabbtn-dashboard" aria-selected="false" aria-controls="tab-dashboard" data-tab="dashboard" onclick="switchTab('dashboard')"><svg class="ico" aria-hidden="true"><use href="#i-dash"/></svg><span>Dashboard &amp; P&amp;L</span></button>
+    </nav>
+
+    <section class="key-strip" aria-label="Key figures">
+        <div class="key-stat"><div class="key-ico blue"><svg class="ico" aria-hidden="true"><use href="#i-tag"/></svg></div><div><span class="key-label">Total price</span><span class="key-value" id="ksPrice">-</span><span class="key-sub">Price proposal</span></div></div>
+        <div class="key-stat"><div class="key-ico orange"><svg class="ico" aria-hidden="true"><use href="#i-wallet"/></svg></div><div><span class="key-label">Planned budget</span><span class="key-value" id="ksPlanned">-</span><span class="key-sub">Risk-adjusted cost</span></div></div>
+        <div class="key-stat"><div class="key-ico red"><svg class="ico" aria-hidden="true"><use href="#i-trend"/></svg></div><div><span class="key-label">Actual cost</span><span class="key-value" id="ksActual">-</span><span class="key-sub" id="ksActualSub">0% of plan spent</span></div></div>
+        <div class="key-stat"><div class="key-ico green"><svg class="ico" aria-hidden="true"><use href="#i-cash"/></svg></div><div><span class="key-label">Net cash</span><span class="key-value" id="ksNet">-</span><span class="key-sub">Cash in minus cost</span></div></div>
+    </section>
+
+    <!-- ===================== TAB 1: PRICING ===================== -->
+    <div class="tab-panel active" id="tab-pricing" role="tabpanel" aria-labelledby="tabbtn-pricing">
+        <div class="card" style="padding:1rem 1.5rem;">
+            <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+                <h2 class="card-title" style="font-size:1.4rem;">Pricing &amp; Planned Budget</h2>
+                <button class="info-btn" title="What do these terms mean?" aria-label="Information about price proposal, estimated budget, planned budget and budget baseline" onclick="openInfoModal()">i</button>
+                <span style="font-size:0.85rem; color:var(--text-secondary);">One set of WBS line items drives both the price proposal and the planned budget.</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h2 class="card-title">Project Information</h2></div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Project Name</label>
+                    <input type="text" class="form-input" id="projectName" placeholder="Enter project name" oninput="scheduleSave()">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Client Name</label>
+                    <input type="text" class="form-input" id="clientName" placeholder="Enter client name" oninput="scheduleSave()">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Prepared By</label>
+                    <input type="text" class="form-input" id="preparedBy" placeholder="Your name" oninput="scheduleSave()">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-input" id="projectDate" onchange="scheduleSave()">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Currency</label>
+                    <select class="form-select" id="currency" onchange="calculate()">
+                        <option value="USD">US$ — US Dollar</option>
+                        <option value="EUR">€ — Euro</option>
+                        <option value="ILS">₪ — Israeli Shekel</option>
+                    </select>
+                </div>
+            </div>
+            <div class="two-col-grid" style="margin-top:0.25rem;">
+                <div class="form-group">
+                    <label class="form-label">Project description &amp; details</label>
+                    <textarea class="form-input" id="projectDescription" rows="4" placeholder="Scope, background, assumptions, deliverables, contacts…" oninput="scheduleSave()" style="resize:vertical;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Budget notes</label>
+                    <textarea class="form-input" id="budgetNotes" rows="4" placeholder="Budget basis, exclusions, approvals, funding source, exchange-rate assumptions…" oninput="scheduleSave()" style="resize:vertical;"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h2 class="card-title">WBS Line Items (Plan)</h2>
+                            <p class="card-subtitle">Build the WBS hierarchy with headlines (level 1) and subcategories (level 2 and deeper); line items sit beneath them. WBS numbers are generated automatically from the level (1, 1.1, 1.1.1 …). Use ◀ ▶ to change a row's level (a headline takes its sub-rows with it) and ▲ ▼ to move it. Subtotals roll up through the levels and become your planned budget on the Budget tab.</p>
+                        </div>
+                        <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+                            <button class="btn btn-outline" onclick="addHeadline('top')">+ Add Category Headline</button>
+                            <button class="btn btn-outline" onclick="addHeadline('sub')">+ Add Subcategory</button>
+                            <button class="btn btn-primary" onclick="addItem()">+ Add Item</button>
+                            <button class="btn btn-danger" onclick="clearAllItems()">🗑️ Clear All</button>
+                        </div>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="items-table pricing-items-table">
+                            <thead>
+                                <tr>
+                                    <th>WBS</th><th>Level</th><th>Category</th><th>Description</th>
+                                    <th>Unit</th><th>Qty</th><th>Unit Cost</th><th>Risk</th><th>Subtotal</th><th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemsTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+                        <button class="btn btn-outline" onclick="addHeadline('top')">+ Add Category Headline</button>
+                            <button class="btn btn-outline" onclick="addHeadline('sub')">+ Add Subcategory</button>
+                        <button class="btn btn-secondary" onclick="addItem()">+ Add Another Item</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="side-col">
+                <div class="card" style="padding:1.1rem 1.25rem;">
+                    <div class="card-header" style="margin-bottom:0.85rem; padding-bottom:0.6rem;"><h2 class="card-title" style="font-size:1.1rem;">Assumptions</h2></div>
+                    <div class="assumptions-grid">
+                        <div class="assumption-item">
+                            <span class="assumption-label">Low Risk Factor</span>
+                            <input type="number" class="assumption-input" id="riskLow" value="1.05" step="0.01" min="1" onchange="calculate()">
+                        </div>
+                        <div class="assumption-item">
+                            <span class="assumption-label">Medium Risk Factor</span>
+                            <input type="number" class="assumption-input" id="riskMedium" value="1.15" step="0.01" min="1" onchange="calculate()">
+                        </div>
+                        <div class="assumption-item">
+                            <span class="assumption-label">High Risk Factor</span>
+                            <input type="number" class="assumption-input" id="riskHigh" value="1.25" step="0.01" min="1" onchange="calculate()">
+                        </div>
+                        <div class="assumption-item">
+                            <span class="assumption-label">Critical Risk Factor</span>
+                            <input type="number" class="assumption-input" id="riskCritical" value="1.40" step="0.01" min="1" onchange="calculate()">
+                        </div>
+                        <div class="assumption-item" style="background:#FFF5F5;">
+                            <span class="assumption-label">Contingency Reserve %</span>
+                            <input type="number" class="assumption-input" id="contingency" value="10" step="1" min="0" max="100" onchange="calculate()">
+                        </div>
+                        <div class="assumption-item" style="background:#FFF5F5;">
+                            <span class="assumption-label">Profit Margin %</span>
+                            <input type="number" class="assumption-input" id="profitMargin" value="20" step="1" min="0" max="100" onchange="calculate()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="padding:1.1rem 1.25rem;">
+                    <div class="card-header" style="margin-bottom:0.85rem; padding-bottom:0.6rem;"><h2 class="card-title" style="font-size:1.1rem;">Pricing Summary</h2></div>
+                    <div class="summary-grid">
+                        <div class="summary-item"><span class="summary-label">Base Cost</span><span class="summary-value" id="baseCost">$0</span></div>
+                        <div class="summary-item"><span class="summary-label">Risk-Adjusted Cost</span><span class="summary-value" id="riskAdjustedCost">$0</span></div>
+                        <div class="summary-item highlight"><span class="summary-label">Contingency Reserve</span><span class="summary-value" id="contingencyAmount">$0</span></div>
+                        <div class="summary-item highlight"><span class="summary-label">Profit Amount</span><span class="summary-value" id="profitAmount">$0</span></div>
+                        <div class="summary-item total"><span class="summary-label">TOTAL TENDER PRICE</span><span class="summary-value" id="totalPrice">$0</span></div>
+                    </div>
+
+                    <div style="margin-top:0.9rem;">
+                        <h3 style="margin-bottom:0.5rem; color:var(--primary-dark); font-size:0.88rem;">Category Breakdown</h3>
+                        <div id="categoryBreakdown"></div>
+                    </div>
+
+                    <div class="info-box" style="padding:0.65rem 0.8rem; font-size:0.78rem;"><strong>💡 How it works:</strong> Base costs are multiplied by risk factors, then contingency and profit are added to calculate the tender price. This total also becomes the Plan baseline on the Budget tab.</div>
+
+                    <div class="export-section">
+                        <button class="btn btn-success" onclick="exportToExcel()">📊 Export to Excel</button>
+                        <button class="btn btn-primary" onclick="printSummary()">🖨️ Print</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== TAB 1b: PRICING SUMMARY ===================== -->
+    <div class="tab-panel" id="tab-pricingSummary" role="tabpanel" aria-labelledby="tabbtn-pricingSummary">
+        <div class="grid grid-equal">
+            <div class="card">
+                <div class="card-header"><h2 class="card-title">Total Sum</h2></div>
+                <div class="summary-grid">
+                    <div class="summary-item"><span class="summary-label">Base Cost</span><span class="summary-value" id="psBaseCost">$0</span></div>
+                    <div class="summary-item"><span class="summary-label">Risk-Adjusted Cost</span><span class="summary-value" id="psRiskAdjustedCost">$0</span></div>
+                    <div class="summary-item highlight"><span class="summary-label">Contingency Reserve</span><span class="summary-value" id="psContingencyAmount">$0</span></div>
+                    <div class="summary-item highlight"><span class="summary-label">Profit Amount</span><span class="summary-value" id="psProfitAmount">$0</span></div>
+                    <div class="summary-item total"><span class="summary-label">TOTAL TENDER PRICE</span><span class="summary-value" id="psTotalPrice">$0</span></div>
+                </div>
+                <h3 class="chart-title">How the price builds up</h3>
+                <div id="priceBuildUp"></div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h2 class="card-title">Pricing by Category</h2></div>
+                <div id="categoryDonut"></div>
+                <div id="categoryBreakdownSummaryTab"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Summary by Section (Headline)</h2>
+                    <p class="card-subtitle">Roll-up of every category headline added on the Pricing &amp; Planned Budget tab</p>
+                </div>
+            </div>
+            <div style="overflow-x:auto;" id="sectionBreakdownTable"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Pricing by Unit</h2>
+                    <p class="card-subtitle">Line items grouped by unit of measure, including contingency and profit</p>
+                </div>
+            </div>
+            <div style="overflow-x:auto;" id="unitBreakdownTable"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h2 class="card-title">Export</h2></div>
+            <div class="export-section">
+                <button class="btn btn-success" onclick="exportToExcel()">📊 Export to Excel</button>
+                <button class="btn btn-primary" onclick="printSummary()">🖨️ Print</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== TAB 2: BUDGET ===================== -->
+    <div class="tab-panel" id="tab-budget" role="tabpanel" aria-labelledby="tabbtn-budget">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Revenue / Contract Value</h2>
+                    <p class="card-subtitle">Fallback total revenue used to calculate Gross Margin on the Dashboard. Once you add milestones on the Income &amp; Revenue tab, their planned amounts are used instead of this value.</p>
+                </div>
+            </div>
+            <div class="form-grid" style="grid-template-columns: 1fr; max-width:320px;">
+                <div class="form-group">
+                    <label class="form-label">Contract / Revenue Value</label>
+                    <input type="number" class="form-input" id="revenueValue" value="0" min="0" step="0.01" onchange="calculate()">
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Budget Tracking — Plan vs Actual</h2>
+                    <p class="card-subtitle">Enter actual quantities and costs as work progresses to track variance and ETC</p>
+                </div>
+                <button class="btn btn-primary" onclick="addBudgetRowManual()">+ Add Budget Line</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th>WBS</th><th>Level</th><th>Description</th><th>Category</th>
+                            <th>Plan Qty</th><th>Plan Cost</th><th>Plan Total</th>
+                            <th>Actual Qty</th><th>Actual Cost</th><th>Actual Total</th>
+                            <th>Variance</th><th>% Used</th><th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="budgetTableBody"></tbody>
+                </table>
+            </div>
+            <div class="warn-box">⚠️ Rows follow the WBS hierarchy and numbering of the Pricing &amp; Planned Budget tab (risk-adjusted Plan cost); headline rows show the rolled-up totals of everything beneath them. Add extra budget-only lines here if needed; edits to Actual Qty/Cost do not change the Pricing tab.</div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Budget Timeline — Planned vs Actual</h2>
+                    <p class="card-subtitle">Give each budget line a planned and an actual start/end date. Costs are spread evenly (by day) across each period to build the monthly expense distribution and cash flow below. Actual cost without actual dates uses the planned dates; an actual start with no end date runs through today.</p>
+                </div>
+            </div>
+            <div style="display:flex; gap:1rem; flex-wrap:wrap; align-items:flex-end; margin-bottom:1rem;">
+                <div class="form-group" style="min-width:160px;">
+                    <label class="form-label">Project Start</label>
+                    <input type="date" class="form-input" id="projStart" onchange="scheduleSave()">
+                </div>
+                <div class="form-group" style="min-width:160px;">
+                    <label class="form-label">Project End</label>
+                    <input type="date" class="form-input" id="projEnd" onchange="scheduleSave()">
+                </div>
+                <button class="btn btn-outline" onclick="fillPlanDatesFromProject()">Fill empty planned dates from project period</button>
+                <button class="btn btn-outline" onclick="copyPlanToActualDates()">Copy planned dates to empty actual dates (lines with actual cost)</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="items-table timeline-table">
+                    <thead>
+                        <tr>
+                            <th>WBS</th><th>Description</th><th>Plan Total</th>
+                            <th>Plan Start</th><th>Plan End</th>
+                            <th>Actual Total</th><th>Actual Start</th><th>Actual End</th>
+                            <th>Schedule</th>
+                        </tr>
+                    </thead>
+                    <tbody id="timelineTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Expense Timeline &amp; Cash Flow Analysis</h2>
+                    <p class="card-subtitle">Monthly cost distribution (planned vs actual) combined with income milestones from the Income &amp; Revenue tab</p>
+                </div>
+            </div>
+            <div id="cfaSummary" class="summary-grid cashflow-summary-grid"></div>
+
+            <h3 class="chart-title">Monthly Expense Distribution</h3>
+            <div id="expenseTimelineChart"></div>
+
+            <div class="two-col-grid">
+                <div>
+                    <h3 class="chart-title">Cumulative Cash Flow</h3>
+                    <div id="cumulativeCashChart"></div>
+                </div>
+                <div>
+                    <h3 class="chart-title">Net Cash Position (Cash In − Cost)</h3>
+                    <div id="netCashChart"></div>
+                </div>
+            </div>
+
+            <h3 class="chart-title">Monthly Cash Flow Table</h3>
+            <div style="overflow-x:auto;" id="cashflowMonthlyTable"></div>
+            <div id="cfaNotes"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h2 class="card-title">Budget by Category — Plan vs Actual</h2></div>
+            <div id="budgetCategoryBreakdown"></div>
+        </div>
+    </div>
+
+    <!-- ===================== TAB: SCHEDULE (GANTT) ===================== -->
+    <div class="tab-panel" id="tab-schedule" role="tabpanel" aria-labelledby="tabbtn-schedule">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Schedule — Gantt Chart</h2>
+                    <p class="card-subtitle">Built from your budget items, grouped by their section headlines or cost category. Blue bars are planned dates, green/red bars are actual dates (red = finished after plan), diamonds are milestones, arrows are dependencies.</p>
+                </div>
+            </div>
+            <div style="display:flex; gap:1rem; flex-wrap:wrap; align-items:flex-end; margin-bottom:1rem;">
+                <div class="form-group">
+                    <label class="form-label">Group by</label>
+                    <select class="form-select" id="ganttGroupBy" onchange="renderSchedule()" style="min-width:190px;">
+                        <option value="section">Section (headline)</option>
+                        <option value="category">Budget category</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Zoom</label>
+                    <select class="form-select" id="ganttZoom" onchange="renderSchedule()">
+                        <option value="0.6">Compact</option>
+                        <option value="1" selected>Normal</option>
+                        <option value="2">Wide</option>
+                        <option value="4">Extra wide</option>
+                    </select>
+                </div>
+                <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.9rem; padding-bottom:0.7rem;"><input type="checkbox" id="ganttShowActual" checked onchange="renderSchedule()"> Show actual bars</label>
+                <button class="btn btn-primary" onclick="openAutoSchedule()"><svg class="ico" aria-hidden="true"><use href="#i-sparkles"/></svg>Auto schedule</button>
+                <button class="btn btn-outline" onclick="autoScheduleDependents()" title="Shift tasks that start before their predecessors finish">Fix dependency conflicts</button>
+                <button class="btn btn-outline" id="undoAutoBtn" onclick="undoAutoSchedule()" style="display:none;">Undo auto schedule</button>
+                <span id="ganttMsg" style="font-size:0.85rem; color:var(--text-secondary); padding-bottom:0.7rem;"></span>
+            </div>
+            <div id="ganttSummary"></div>
+            <div style="overflow-x:auto; border:1px solid var(--border); border-radius:8px;" id="ganttChart"></div>
+            <div class="chart-legend" style="margin-top:0.6rem;">
+                <span><i style="border-top:8px solid #2C5282"></i>Planned</span>
+                <span><i style="border-top:6px solid #38A169"></i>Actual</span>
+                <span><i style="border-top:6px solid #E53E3E"></i>Actual finished late</span>
+                <span><i style="border-top:6px solid #1A365D"></i>Section / category span</span>
+                <span style="color:#ED8936;">◆ Milestone</span>
+                <span style="color:#38A169;">◆ Milestone done</span>
+                <span><i style="border-top:2px solid #718096"></i>Dependency</span>
+                <span><i style="border-top:2px solid #E53E3E"></i>Conflict</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Milestones</h2>
+                    <p class="card-subtitle">Key dates for the project. Link a milestone to a task and tick “follows task end” to keep it on that task’s planned finish date automatically.</p>
+                </div>
+                <button class="btn btn-primary" onclick="addScheduleMilestone()">+ Add Milestone</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="items-table milestone-table">
+                    <thead><tr><th>Milestone</th><th>Linked task</th><th>Date</th><th>Follows task end</th><th>Done</th><th></th></tr></thead>
+                    <tbody id="milestoneTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Task Dates &amp; Dependencies</h2>
+                    <p class="card-subtitle">Finish-to-start links: a task should start after every predecessor finishes. Planned dates are shared with the Budget tab.</p>
+                </div>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="items-table dependency-table">
+                    <thead><tr><th>WBS</th><th>Task / Item</th><th>Plan Start</th><th>Plan End</th><th>Duration</th><th>Predecessors</th><th>Status</th></tr></thead>
+                    <tbody id="dependencyTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== TAB 4: INCOME & REVENUE ===================== -->
+    <div class="tab-panel" id="tab-income" role="tabpanel" aria-labelledby="tabbtn-income">
+        <div class="kpi-grid">
+            <div class="kpi-card accent">
+                <div class="kpi-ico"><svg class="ico" aria-hidden="true"><use href="#i-cash"/></svg></div>
+                <div class="kpi-label">Planned Revenue</div>
+                <div class="kpi-value" id="incPlannedTotal">$0</div>
+                <div class="kpi-sub">Sum of all milestone planned amounts</div>
+            </div>
+            <div class="kpi-card success">
+                <div class="kpi-ico"><svg class="ico" aria-hidden="true"><use href="#i-down"/></svg></div>
+                <div class="kpi-label">Actual Received</div>
+                <div class="kpi-value" id="incActualTotal">$0</div>
+                <div class="kpi-sub" id="incPctCollected">0% collected</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-ico"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg></div>
+                <div class="kpi-label">Outstanding</div>
+                <div class="kpi-value" id="incOutstanding">$0</div>
+                <div class="kpi-sub">Planned minus received</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Income &amp; Revenue Milestones</h2>
+                    <p class="card-subtitle">Link each milestone to a WBS item from the Pricing &amp; Planned Budget tab, then track planned vs. actual payments as invoices are raised and collected.</p>
+                </div>
+                <button class="btn btn-primary" onclick="addIncomeMilestone()">+ Add Income Milestone</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="items-table income-items-table">
+                    <thead>
+                        <tr>
+                            <th>WBS</th><th>Milestone / Description</th>
+                            <th>Planned Amount</th><th>Planned Date</th>
+                            <th>Actual Amount</th><th>Actual Date</th>
+                            <th>Status</th><th>Variance</th><th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="incomeTableBody"></tbody>
+                </table>
+            </div>
+            <div class="info-box">💡 The WBS dropdown lists every WBS code you entered for a line item on the Pricing &amp; Planned Budget tab, so income milestones stay connected to the budget line they bill for. Once any milestones exist here, their Planned Amounts replace the manual "Contract / Revenue Value" on the Budget tab, and Actual Amounts feed the Cash Flow section on the Dashboard.</div>
+        </div>
+    </div>
+
+    <!-- ===================== TAB 3: DASHBOARD ===================== -->
+    <div class="tab-panel" id="tab-dashboard" role="tabpanel" aria-labelledby="tabbtn-dashboard">
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-ico"><svg class="ico" aria-hidden="true"><use href="#i-wallet"/></svg></div>
+                <div class="kpi-label">Plan Total (Budget)</div>
+                <div class="kpi-value" id="kpiPlanTotal">$0</div>
+                <div class="kpi-sub">Risk-adjusted WBS cost</div>
+            </div>
+            <div class="kpi-card" id="kpiActualCard">
+                <div class="kpi-ico"><svg class="ico" aria-hidden="true"><use href="#i-trend"/></svg></div>
+                <div class="kpi-label">Actual Total</div>
+                <div class="kpi-value" id="kpiActualTotal">$0</div>
+                <div class="kpi-sub" id="kpiActualSub">0% of plan spent</div>
+            </div>
+            <div class="kpi-card accent">
+                <div class="kpi-ico"><svg class="ico" aria-hidden="true"><use href="#i-cash"/></svg></div>
+                <div class="kpi-label">Revenue</div>
+                <div class="kpi-value" id="kpiRevenue">$0</div>
+                <div class="kpi-sub">Contract value</div>
+            </div>
+            <div class="kpi-card success" id="kpiMarginCard">
+                <div class="kpi-ico"><svg class="ico" aria-hidden="true"><use href="#i-percent"/></svg></div>
+                <div class="kpi-label">Gross Margin</div>
+                <div class="kpi-value" id="kpiMargin">$0</div>
+                <div class="kpi-sub" id="kpiMarginPct">0% margin</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div>
+                <div class="card">
+                    <div class="card-header"><h2 class="card-title">Plan vs Actual — Profit &amp; Loss</h2></div>
+                    <div class="summary-grid">
+                        <div class="summary-item"><span class="summary-label">Revenue (Planned/Contract)</span><span class="summary-value" id="plRevenue">$0</span></div>
+                        <div class="summary-item good"><span class="summary-label">Actual Revenue Received (Cash In)</span><span class="summary-value" id="plActualRevenue">$0</span></div>
+                        <div class="summary-item"><span class="summary-label">Plan Cost (Tender Total)</span><span class="summary-value" id="plPlanCost">$0</span></div>
+                        <div class="summary-item"><span class="summary-label">Actual Cost to Date</span><span class="summary-value" id="plActualCost">$0</span></div>
+                        <div class="summary-item highlight"><span class="summary-label">Estimate to Complete (ETC)</span><span class="summary-value" id="plETC">$0</span></div>
+                        <div class="summary-item highlight"><span class="summary-label">Forecast Cost at Completion</span><span class="summary-value" id="plForecast">$0</span></div>
+                        <div class="summary-item total"><span class="summary-label">GROSS MARGIN (Revenue − Actual)</span><span class="summary-value" id="plGrossMargin">$0</span></div>
+                    </div>
+                    <div class="info-box"><strong>💡 ETC</strong> = remaining Plan cost for line items not yet fully spent (Plan Total − Actual Total, floored at 0, summed across items where Actual &lt; Plan).</div>
+                </div>
+            </div>
+            <div>
+                <div class="card">
+                    <div class="card-header"><h2 class="card-title">Cost Variance by Category</h2></div>
+                    <div id="dashboardCategoryBreakdown"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Cash Flow</h2>
+                    <p class="card-subtitle">Cumulative planned vs actual cash in (Income &amp; Revenue milestones) and cost (spread by the Budget tab timelines), month by month</p>
+                </div>
+            </div>
+            <div class="summary-grid cashflow-summary-grid">
+                <div class="summary-item good"><span class="summary-label">Cash In (Actual Received)</span><span class="summary-value" id="cfCashIn">$0</span></div>
+                <div class="summary-item bad"><span class="summary-label">Cash Out (Actual Cost)</span><span class="summary-value" id="cfCashOut">$0</span></div>
+                <div class="summary-item total"><span class="summary-label">NET CASH POSITION</span><span class="summary-value" id="cfNetPosition">$0</span></div>
+                <div class="summary-item highlight"><span class="summary-label">Outstanding Receivables</span><span class="summary-value" id="cfOutstanding">$0</span></div>
+            </div>
+            <div id="cashFlowChart"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Full Export</h2>
+            </div>
+            <p style="color:var(--text-secondary); margin-bottom:1rem; font-size:0.9rem;">Export everything (Pricing, Budget Plan vs Actual, and P&amp;L Dashboard) into one Excel workbook, or save a project file to re-open later on this or another computer.</p>
+            <div class="export-section">
+                <button class="btn btn-success" onclick="exportToExcel()">📊 Export Full Excel Report</button>
+                <button class="btn btn-outline" onclick="exportProjectJSON()">💾 Save Project File As... (.json)</button>
+                <button class="btn btn-primary" onclick="printSummary()">🖨️ Print Dashboard</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="infoModal" onclick="if(event.target===this) closeInfoModal()">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="infoModalTitle">
+            <button class="modal-close" onclick="closeInfoModal()" aria-label="Close">×</button>
+            <h2 id="infoModalTitle">Pricing &amp; Planned Budget — key terms</h2>
+            <p style="font-size:0.86rem; color:var(--text-secondary);">How the four terms relate in this tool, from first estimate to the reference you track against.</p>
+            <div class="info-flow">
+                <span class="step">Estimated budget</span><span class="arrow">→</span>
+                <span class="step">Price proposal</span><span class="arrow">→</span>
+                <span class="step">Planned budget</span><span class="arrow">→</span>
+                <span class="step">Budget baseline</span>
+            </div>
+
+            <div class="info-term">
+                <h3>Estimated budget</h3>
+                <p>The bottom-up cost estimate: for every WBS line, quantity × unit cost. It is your honest expected cost of doing the work, before any risk allowance, contingency or profit is added.</p>
+                <div class="where">In the tool: <strong>Base Cost</strong> (Pricing summary). Now: <strong id="infoBase">—</strong></div>
+            </div>
+            <div class="info-term">
+                <h3>Price proposal</h3>
+                <p>The price you offer the client. It starts from the estimate, applies a risk factor to each line, then adds a contingency reserve and your profit margin on top.</p>
+                <div class="where">In the tool: <strong>Total Tender Price</strong> = risk-adjusted cost + contingency + profit. Now: <strong id="infoPrice">—</strong> (risk-adjusted <span id="infoRisk">—</span>, contingency <span id="infoCont">—</span>, profit <span id="infoProfit">—</span>)</div>
+            </div>
+            <div class="info-term">
+                <h3>Planned budget</h3>
+                <p>The cost you plan to spend, line by line, to deliver the project. It excludes your profit, and the contingency reserve is held separately instead of being spread over the lines. Each line can also carry planned start and end dates.</p>
+                <div class="where">In the tool: the <strong>Plan Total</strong> of each WBS line on the Budget tab (risk-adjusted cost). Now: <strong id="infoPlanned">—</strong></div>
+            </div>
+            <div class="info-term">
+                <h3>Budget baseline</h3>
+                <p>The agreed version of the planned budget (and schedule) that you freeze at approval and measure actual cost and progress against, so variance always means “versus what we agreed”.</p>
+                <div class="where">In the tool: the planned budget and planned dates are what Actuals are compared to on the Budget tab, the Schedule and the Dashboard. The tool does not lock a snapshot automatically, so use <strong>Save Project File As…</strong> when the budget is approved to keep a frozen copy of the baseline.</div>
+            </div>
+            <p style="font-size:0.78rem; color:var(--text-secondary); margin-top:0.9rem;">Tip: changes to line items on this tab update the planned budget everywhere, so treat the saved project file as your approved baseline.</p>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="autoSchedModal" onclick="if(event.target===this) closeAutoSchedule()">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="autoSchedTitle">
+            <button class="modal-close" onclick="closeAutoSchedule()" aria-label="Close">×</button>
+            <h2 id="autoSchedTitle">Recommended schedule</h2>
+            <p style="font-size:0.86rem; color:var(--text-secondary);">Proposes planned start and end dates for every task. Task length comes from quantity and unit (8 hours = 1 day, 1 month = 21 working days; other units default to 5 days). Sections and sub-sections run one after another, tasks inside a section run in parallel, and your dependencies are always respected. Nothing changes until you press Apply, and you can undo it afterwards.</p>
+            <div class="form-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top:1rem;">
+                <div class="form-group"><label class="form-label">Project start</label><input type="date" class="form-input" id="asStart" onchange="renderAutoPreview()"></div>
+                <div class="form-group"><label class="form-label">Project end (optional)</label><input type="date" class="form-input" id="asEnd" onchange="renderAutoPreview()"></div>
+                <div class="form-group" style="grid-column: 1 / -1;"><label class="form-label">Apply to</label>
+                    <select class="form-select" id="asScope" onchange="renderAutoPreview()">
+                        <option value="missing">Only tasks without planned dates (keep the rest)</option>
+                        <option value="all">All tasks (overwrite planned dates)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="as-options">
+                <label><input type="checkbox" id="asFit" onchange="renderAutoPreview()"> Fit the schedule to the project end date</label>
+                <label><input type="checkbox" id="asWeekends" checked onchange="renderAutoPreview()"> Skip weekends (Monday to Friday working days)</label>
+                <label><input type="checkbox" id="asKeep" checked onchange="renderAutoPreview()"> Keep existing task durations where a task already has dates</label>
+                <label><input type="checkbox" id="asMilestones" onchange="renderAutoPreview()"> Add a milestone at the end of each phase (level-1 headline)</label>
+            </div>
+            <div id="autoSchedSummary"></div>
+            <div id="autoSchedPreview" style="max-height:300px; overflow:auto; border:1px solid var(--border); border-radius:10px;"></div>
+            <div style="display:flex; gap:0.6rem; justify-content:flex-end; margin-top:1rem; flex-wrap:wrap;">
+                <button class="btn btn-outline" onclick="closeAutoSchedule()">Cancel</button>
+                <button class="btn btn-primary" onclick="applyAutoSchedule()">Apply schedule</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>ProjectPilot Offline Tool — all data is stored only in this browser (localStorage) and in any project files you save. Nothing is sent to a server. By Amit Epstein</footer>
+</div>
+
+<script src="xlsx.full.min.js"></script>
+<script>
+let items = [];          // Pricing WBS items (Plan source)
+let budgetExtras = [];   // Extra budget-only lines not tied to a pricing item
+let actuals = {};        // { itemId: { qty, cost } } actual entries keyed by item id (pricing items + extras)
+let incomeMilestones = []; // { id, linkId (row id), description, plannedAmount, plannedDate, actualAmount, actualDate, status }
+let timelines = {};      // { rowId: { planStart, planEnd, actStart, actEnd, preds:[rowIds] } } for budget rows (pricing items + extras)
+let scheduleMilestones = []; // { id, name, date, taskId, follow, done }
+let itemCounter = 0;
+let saveTimer = null;
+
+const categories = ['Labor', 'Materials', 'Equipment', 'Services', 'Travel', 'Testing', 'Training', 'Other'];
+const units = ['Hours', 'Days', 'Units', 'Licenses', 'Months', 'Sessions', 'Each', 'Shift'];
+const riskLevels = ['Low', 'Medium', 'High', 'Critical'];
+
+const STORAGE_KEY = 'priceaxis_offline_project_v1';
+
+document.getElementById('projectDate').valueAsDate = new Date();
+
+// ---------------- Key figures strip & extra graphics ----------------
+const CHART_PALETTE = ['#2C5282', '#ED8936', '#38A169', '#805AD5', '#D69E2E', '#319795', '#E53E3E', '#718096'];
+
+function updateKeyStrip(o) {
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('ksPrice', document.getElementById('totalPrice').textContent);
+    set('ksPlanned', formatCurrency(o.planTotal));
+    set('ksActual', formatCurrency(o.actualTotal));
+    set('ksActualSub', o.pctSpent.toFixed(0) + '% of plan spent');
+    set('ksNet', formatCurrency(o.netCash));
+    const net = document.getElementById('ksNet');
+    if (net) net.classList.toggle('neg', o.netCash < 0);
+}
+
+function renderCategoryDonut(containerId, categoryTotals, total) {
+    const c = document.getElementById(containerId);
+    if (!c) return;
+    const entries = Object.entries(categoryTotals).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+    if (!entries.length || total <= 0) { c.innerHTML = ''; return; }
+    let offset = 0, arcs = '', legend = '';
+    entries.forEach(([cat, v], i) => {
+        const pct = v / total * 100;
+        const color = CHART_PALETTE[i % CHART_PALETTE.length];
+        arcs += `<circle cx="21" cy="21" r="15.9155" fill="none" stroke="${color}" stroke-width="6.2" stroke-dasharray="${pct.toFixed(3)} ${(100 - pct).toFixed(3)}" stroke-dashoffset="${(25 - offset).toFixed(3)}"><title>${escapeHtml(cat)}: ${formatCurrency(v)} (${pct.toFixed(1)}%)</title></circle>`;
+        legend += `<div class="lg"><span class="sw" style="background:${color}"></span><span class="nm">${escapeHtml(cat)}</span><span class="vl">${formatCurrency(v)}</span><span class="pc">${pct.toFixed(1)}%</span></div>`;
+        offset += pct;
+    });
+    c.innerHTML = `<div class="donut-wrap">
+        <svg viewBox="0 0 42 42" role="img" aria-label="Cost by category">
+            <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#E6ECF5" stroke-width="6.2"/>
+            ${arcs}
+            <text x="21" y="20" text-anchor="middle" font-size="3" fill="#5A6577">Total cost</text>
+            <text x="21" y="25" text-anchor="middle" font-size="4.4" font-weight="700" fill="#1A365D">${formatCurrencyShort(total)}</text>
+        </svg>
+        <div class="donut-legend">${legend}</div>
+    </div>`;
+}
+
+function renderPriceBuildUp(base, riskAdj, contingency, profit, total) {
+    const c = document.getElementById('priceBuildUp');
+    if (!c) return;
+    if (total <= 0) { c.innerHTML = '<p style="color:var(--text-secondary); font-size:0.85rem;">Add line items to see how the price builds up.</p>'; return; }
+    const segs = [
+        { name: 'Base cost', v: base, c: '#2C5282' },
+        { name: 'Risk allowance', v: Math.max(0, riskAdj - base), c: '#D69E2E' },
+        { name: 'Contingency', v: contingency, c: '#ED8936' },
+        { name: 'Profit', v: profit, c: '#38A169' }
+    ];
+    c.innerHTML = `<div class="buildup" role="img" aria-label="Price composition">${segs.map(x => `<span style="width:${(x.v / total * 100).toFixed(2)}%; background:${x.c}" title="${x.name}: ${formatCurrency(x.v)}"></span>`).join('')}</div>
+        <div class="buildup-legend">${segs.map(x => `<div class="lg"><span class="sw" style="background:${x.c}"></span>${x.name}<span class="vl">${(x.v / total * 100).toFixed(1)}%</span></div>`).join('')}</div>`;
+}
+
+// ---------------- Info modal ----------------
+function openInfoModal() {
+    const txt = id => document.getElementById(id).textContent;
+    document.getElementById('infoBase').textContent = txt('baseCost');
+    document.getElementById('infoRisk').textContent = txt('riskAdjustedCost');
+    document.getElementById('infoCont').textContent = txt('contingencyAmount');
+    document.getElementById('infoProfit').textContent = txt('profitAmount');
+    document.getElementById('infoPrice').textContent = txt('totalPrice');
+    document.getElementById('infoPlanned').textContent = txt('riskAdjustedCost');
+    document.getElementById('infoModal').classList.add('open');
+}
+function closeInfoModal() { document.getElementById('infoModal').classList.remove('open'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeInfoModal(); closeAutoSchedule(); } });
+document.querySelector('.tabs').addEventListener('keydown', e => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    const btns = Array.from(document.querySelectorAll('.tab-btn'));
+    const i = btns.findIndex(b => b.classList.contains('active'));
+    const next = btns[(i + (e.key === 'ArrowRight' ? 1 : -1) + btns.length) % btns.length];
+    next.focus();
+    next.click();
+});
+
+// ---------------- Tabs ----------------
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => {
+        const on = b.dataset.tab === tab;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+        b.tabIndex = on ? 0 : -1;
+        if (on && b.scrollIntoView) b.scrollIntoView({ inline: 'center', block: 'nearest' });
+    });
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    if (tab === 'budget') renderBudget();
+    if (tab === 'income') renderIncomeTab();
+    if (tab === 'schedule') renderSchedule();
+    if (tab === 'dashboard') renderDashboard();
+}
+
+// ---------------- Sample data ----------------
+function initializeSampleData() {
+    items = [];
+    itemCounter = 0;
+    const id = {};
+    const H = (title, level) => { items.push({ id: itemCounter++, type: 'headline', level, title }); };
+    const L = (key, level, category, description, unit, quantity, unitCost, risk) => {
+        id[key] = itemCounter;
+        items.push({ id: itemCounter++, type: 'line', level, wbsCode: '', category, description, unit, quantity, unitCost, risk });
+    };
+    H('Initial Phase', 1);
+    L('pm', 2, 'Labor', 'Project Manager', 'Hours', 160, 150, 'Low');
+    H('Project Main Phase', 1);
+    H('Development', 2);
+    L('dev', 3, 'Labor', 'Senior Developer', 'Hours', 320, 125, 'Medium');
+    H('Infrastructure', 2);
+    L('hw', 3, 'Materials', 'Server Hardware', 'Units', 5, 2500, 'Medium');
+    H('Final Phase', 1);
+    L('cloud', 2, 'Services', 'Cloud Services', 'Months', 12, 800, 'Low');
+    document.getElementById('revenueValue').value = 200000;
+
+    actuals = {};
+    timelines = {};
+    timelines[id.pm] = { planStart: addMonthsToToday(-1), planEnd: addDaysToToday(-1), actStart: addMonthsToToday(-1), actEnd: addDaysToToday(-1) };
+    timelines[id.dev] = { planStart: addMonthsToToday(0), planEnd: addMonthsToToday(2), actStart: addMonthsToToday(0), actEnd: '', preds: [String(id.pm)] };
+    timelines[id.hw] = { planStart: addMonthsToToday(1), planEnd: addMonthsToToday(2), actStart: '', actEnd: '', preds: [String(id.pm)] };
+    timelines[id.cloud] = { planStart: addMonthsToToday(3), planEnd: addMonthsToToday(4), actStart: '', actEnd: '', preds: [String(id.dev), String(id.hw)] };
+    scheduleMilestones = [
+        { id: 'ms_' + (itemCounter++), name: 'Project kickoff', date: addMonthsToToday(-1), taskId: '', follow: false, done: true },
+        { id: 'ms_' + (itemCounter++), name: 'Initial phase complete', date: '', taskId: String(id.pm), follow: true, done: true },
+        { id: 'ms_' + (itemCounter++), name: 'Development complete', date: '', taskId: String(id.dev), follow: true, done: false },
+        { id: 'ms_' + (itemCounter++), name: 'Final delivery', date: '', taskId: String(id.cloud), follow: true, done: false }
+    ];
+    actuals[id.pm] = { qty: 160, cost: 150 };
+    actuals[id.dev] = { qty: 40, cost: 125 };
+    document.getElementById('projStart').value = addMonthsToToday(-1);
+    document.getElementById('projEnd').value = addMonthsToToday(4);
+
+    incomeMilestones = [];
+    incomeMilestones.push({ id: 'inc_' + (itemCounter++), linkId: String(id.pm), description: 'Milestone 1 - Project Kickoff', plannedAmount: 60000, plannedDate: addMonthsToToday(0), actualAmount: 60000, actualDate: addMonthsToToday(0), status: 'Paid' });
+    incomeMilestones.push({ id: 'inc_' + (itemCounter++), linkId: String(id.dev), description: 'Milestone 2 - Development Complete', plannedAmount: 80000, plannedDate: addMonthsToToday(2), actualAmount: 0, actualDate: '', status: 'Invoiced' });
+    incomeMilestones.push({ id: 'inc_' + (itemCounter++), linkId: String(id.cloud), description: 'Milestone 3 - Final Delivery', plannedAmount: 60000, plannedDate: addMonthsToToday(4), actualAmount: 0, actualDate: '', status: 'Planned' });
+
+    renderItems();
+    calculate();
+}
+
+function addDaysToToday(days) {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return d.toISOString().split('T')[0];
+}
+
+function addMonthsToToday(months) {
+    const d = new Date();
+    d.setMonth(d.getMonth() + months);
+    return d.toISOString().split('T')[0];
+}
+
+// ---------------- Pricing item CRUD ----------------
+// ---------------- WBS hierarchy (levels & numbering) ----------------
+const MAX_LEVEL = 6;
+
+function levelName(l) { return l === 1 ? 'Headline (level 1)' : (l === 2 ? 'Subcategory (level 2)' : 'Sub-level (level ' + l + ')'); }
+function levelBadge(l) { return `<span class="lvl-badge lvl${Math.min(l, 5)}" title="${levelName(l)}">L${l}</span>`; }
+function levelFromCode(code) {
+    const c = String(code || '').trim();
+    if (!c) return 1;
+    return Math.min(MAX_LEVEL, Math.max(1, c.split('.').filter(Boolean).length));
+}
+
+function maxLevelFor(idx) {
+    if (idx <= 0) return 1;
+    const prev = items[idx - 1];
+    return Math.min(MAX_LEVEL, prev.type === 'headline' ? prev.level + 1 : prev.level);
+}
+
+function normalizeLevels() {
+    let seenHeadline = false;
+    items.forEach((it, idx) => {
+        let lvl = parseInt(it.level, 10);
+        if (!lvl || lvl < 1) lvl = it.type === 'headline' ? 1 : (seenHeadline ? 2 : 1);
+        it.level = Math.max(1, Math.min(lvl, maxLevelFor(idx)));
+        if (it.type === 'headline') seenHeadline = true;
+    });
+}
+
+function renumberWbs() {
+    const c = [0, 0, 0, 0, 0, 0, 0];
+    items.forEach(it => {
+        const l = it.level;
+        c[l - 1]++;
+        for (let k = l; k < c.length; k++) c[k] = 0;
+        it.wbsCode = c.slice(0, l).join('.');
+    });
+}
+
+function subtreeEnd(idx) {
+    const l = items[idx].level;
+    let e = idx + 1;
+    while (e < items.length && items[e].level > l) e++;
+    return e;
+}
+
+function lvlControl(item) {
+    return `<div class="lvl-ctl"><button title="Promote (move up one level)" onclick="changeLevel(${item.id},-1)">◀</button>${levelBadge(item.level)}<button title="Demote (move down one level)" onclick="changeLevel(${item.id},1)">▶</button></div>`;
+}
+
+function changeLevel(id, delta) {
+    normalizeLevels();
+    const idx = items.findIndex(i => i.id === id);
+    if (idx < 0) return;
+    const it = items[idx];
+    const newLvl = it.level + delta;
+    if (newLvl < 1 || newLvl > maxLevelFor(idx)) return;
+    const end = it.type === 'headline' ? subtreeEnd(idx) : idx + 1;
+    for (let k = idx; k < end; k++) if (items[k].level + delta > MAX_LEVEL) return;
+    for (let k = idx; k < end; k++) items[k].level += delta;
+    renderItems();
+    calculate();
+}
+
+function moveBlock(id, dir) {
+    normalizeLevels();
+    const idx = items.findIndex(i => i.id === id);
+    if (idx < 0) return;
+    const it = items[idx];
+    const end = it.type === 'headline' ? subtreeEnd(idx) : idx + 1;
+    if (dir < 0) {
+        let k = idx - 1;
+        while (k >= 0 && items[k].level > it.level) k--;
+        if (k < 0 || items[k].level !== it.level) return;
+        const block = items.splice(idx, end - idx);
+        items.splice(k, 0, ...block);
+    } else {
+        if (end >= items.length || items[end].level !== it.level) return;
+        const end2 = items[end].type === 'headline' ? subtreeEnd(end) : end + 1;
+        const block = items.splice(idx, end - idx);
+        items.splice(end2 - block.length, 0, ...block);
+    }
+    renderItems();
+    calculate();
+}
+
+function addItem() {
+    normalizeLevels();
+    const last = items[items.length - 1];
+    const level = !last ? 1 : Math.min(MAX_LEVEL, last.type === 'headline' ? last.level + 1 : last.level);
+    items.push({ id: itemCounter++, type: 'line', level, wbsCode: '', category: 'Labor', description: '', unit: 'Hours', quantity: 0, unitCost: 0, risk: 'Medium' });
+    renderItems();
+    calculate();
+}
+
+function addHeadline(kind) {
+    normalizeLevels();
+    let level = 1;
+    if (kind === 'sub') {
+        const lastH = [...items].reverse().find(i => i.type === 'headline');
+        const last = items[items.length - 1];
+        const maxL = !last ? 1 : Math.min(MAX_LEVEL, last.type === 'headline' ? last.level + 1 : last.level);
+        level = Math.min(maxL, lastH ? lastH.level + 1 : 1);
+    }
+    items.push({ id: itemCounter++, type: 'headline', level, title: kind === 'sub' ? 'New Subcategory' : 'New Section' });
+    renderItems();
+    calculate();
+}
+
+function deleteItem(id) {
+    items = items.filter(i => i.id !== id);
+    delete actuals[id];
+    delete timelines[id];
+    renderItems();
+    calculate();
+}
+
+function clearAllItems() {
+    if (!confirm('Clear all items, category headlines, project information, and assumptions back to default? This cannot be undone.')) return;
+    items.forEach(i => { delete actuals[i.id]; delete timelines[i.id]; });
+    items = [];
+
+    document.getElementById('projectName').value = '';
+    document.getElementById('clientName').value = '';
+    document.getElementById('preparedBy').value = '';
+    document.getElementById('projectDate').valueAsDate = new Date();
+    document.getElementById('currency').value = 'USD';
+    document.getElementById('projectDescription').value = '';
+    document.getElementById('budgetNotes').value = '';
+
+    document.getElementById('riskLow').value = 1.05;
+    document.getElementById('riskMedium').value = 1.15;
+    document.getElementById('riskHigh').value = 1.25;
+    document.getElementById('riskCritical').value = 1.40;
+    document.getElementById('contingency').value = 10;
+    document.getElementById('profitMargin').value = 20;
+
+    renderItems();
+    calculate();
+}
+
+function updateItem(id, field, value) {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    if (field === 'quantity' || field === 'unitCost') item[field] = parseFloat(value) || 0;
+    else item[field] = value;
+    calculate();
+}
+
+function updateHeadline(id, value) {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    item.title = value;
+    scheduleSave();
+}
+
+function descRows(text) {
+    if (!text) return 1;
+    return Math.min(4, Math.max(1, Math.ceil(text.length / 26)));
+}
+
+function groupSubtotal(headlineIdx) {
+    const end = subtreeEnd(headlineIdx);
+    let total = 0;
+    for (let i = headlineIdx + 1; i < end; i++) {
+        if (items[i].type !== 'headline') total += planTotalForItem(items[i]);
+    }
+    return total;
+}
+
+function renderItems() {
+    normalizeLevels();
+    renumberWbs();
+    const tbody = document.getElementById('itemsTableBody');
+    tbody.innerHTML = '';
+    items.forEach((item, idx) => {
+        const actions = `<td class="row-actions"><button class="mv-btn" title="Move up" onclick="moveBlock(${item.id},-1)">▲</button><button class="mv-btn" title="Move down" onclick="moveBlock(${item.id},1)">▼</button><button class="delete-btn" title="Delete" onclick="deleteItem(${item.id})">✕</button></td>`;
+        const codeCell = `<td><span class="wbs-code" style="margin-left:${(item.level - 1) * 10}px">${escapeHtml(item.wbsCode)}</span></td>`;
+        if (item.type === 'headline') {
+            const subtotal = groupSubtotal(idx);
+            const tr = document.createElement('tr');
+            tr.className = 'headline-row lvl' + Math.min(item.level, 4);
+            tr.innerHTML = `
+                ${codeCell}
+                <td>${lvlControl(item)}</td>
+                <td colspan="6" style="padding-left:${0.5 + (item.level - 1) * 1.1}rem">
+                    <input type="text" class="headline-input" value="${escapeAttr(item.title)}" onchange="updateHeadline(${item.id}, this.value)" placeholder="${item.level === 1 ? 'Headline, e.g. Initial Phase' : 'Subcategory name'}">
+                </td>
+                <td class="calc-cell">${formatCurrency(subtotal)}</td>
+                ${actions}
+            `;
+            tbody.appendChild(tr);
+            return;
+        }
+
+        const row = document.createElement('tr');
+        const baseCost = item.quantity * item.unitCost;
+        const riskFactor = getRiskFactor(item.risk);
+        const subtotal = baseCost * riskFactor;
+        row.innerHTML = `
+            ${codeCell}
+            <td>${lvlControl(item)}</td>
+            <td>
+                <select onchange="updateItem(${item.id}, 'category', this.value)">
+                    ${categories.map(c => `<option value="${c}" ${item.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+                </select>
+            </td>
+            <td><textarea rows="${descRows(item.description)}" onchange="updateItem(${item.id}, 'description', this.value)" placeholder="Item description">${escapeHtml(item.description)}</textarea></td>
+            <td>
+                <select onchange="updateItem(${item.id}, 'unit', this.value)">
+                    ${units.map(u => `<option value="${u}" ${item.unit === u ? 'selected' : ''}>${u}</option>`).join('')}
+                </select>
+            </td>
+            <td><input type="number" value="${item.quantity}" onchange="updateItem(${item.id}, 'quantity', this.value)" min="0" step="1"></td>
+            <td><input type="number" value="${item.unitCost}" onchange="updateItem(${item.id}, 'unitCost', this.value)" min="0" step="0.01"></td>
+            <td class="risk-cell">
+                <select onchange="updateItem(${item.id}, 'risk', this.value)">
+                    ${riskLevels.map(r => `<option value="${r}" ${item.risk === r ? 'selected' : ''}>${r}</option>`).join('')}
+                </select>
+                <span class="badge badge-${item.risk.toLowerCase()}">${riskFactor}x</span>
+            </td>
+            <td class="calc-cell">${formatCurrency(subtotal)}</td>
+            ${actions}
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function getRiskFactor(riskLevel) {
+    switch (riskLevel) {
+        case 'Low': return parseFloat(document.getElementById('riskLow').value) || 1.05;
+        case 'Medium': return parseFloat(document.getElementById('riskMedium').value) || 1.15;
+        case 'High': return parseFloat(document.getElementById('riskHigh').value) || 1.25;
+        case 'Critical': return parseFloat(document.getElementById('riskCritical').value) || 1.40;
+        default: return 1.15;
+    }
+}
+
+function planTotalForItem(item) {
+    return item.quantity * item.unitCost * getRiskFactor(item.risk);
+}
+
+// ---------------- Pricing calculations ----------------
+function calculate() {
+    normalizeLevels();
+    renumberWbs();
+    let baseCost = 0, riskAdjustedCost = 0;
+    const categoryTotals = {};
+
+    items.forEach(item => {
+        if (item.type === 'headline') return;
+        const itemBaseCost = item.quantity * item.unitCost;
+        const riskFactor = getRiskFactor(item.risk);
+        const itemRiskCost = itemBaseCost * riskFactor;
+        baseCost += itemBaseCost;
+        riskAdjustedCost += itemRiskCost;
+        categoryTotals[item.category] = (categoryTotals[item.category] || 0) + itemRiskCost;
+    });
+
+    const contingencyPercent = parseFloat(document.getElementById('contingency').value) || 0;
+    const profitPercent = parseFloat(document.getElementById('profitMargin').value) || 0;
+
+    const contingencyAmount = riskAdjustedCost * (contingencyPercent / 100);
+    const totalCost = riskAdjustedCost + contingencyAmount;
+    const profitAmount = totalCost * (profitPercent / 100);
+    const totalPrice = totalCost + profitAmount;
+
+    document.getElementById('baseCost').textContent = formatCurrency(baseCost);
+    document.getElementById('riskAdjustedCost').textContent = formatCurrency(riskAdjustedCost);
+    document.getElementById('contingencyAmount').textContent = formatCurrency(contingencyAmount);
+    document.getElementById('profitAmount').textContent = formatCurrency(profitAmount);
+    document.getElementById('totalPrice').textContent = formatCurrency(totalPrice);
+
+    renderCategoryBreakdown('categoryBreakdown', categoryTotals, riskAdjustedCost);
+    renderPricingSummaryTab(baseCost, riskAdjustedCost, contingencyAmount, profitAmount, totalPrice, categoryTotals);
+    renderItems();
+    renderBudget();
+    renderIncomeTab();
+    renderDashboard();
+    scheduleSave();
+}
+
+const CURRENCY_SYMBOLS = { USD: '$', EUR: '€', ILS: '₪' };
+
+function getCurrencySymbol() {
+    const el = document.getElementById('currency');
+    return CURRENCY_SYMBOLS[el ? el.value : 'USD'] || '$';
+}
+
+function formatCurrency(amount) {
+    const sign = amount < 0 ? '-' : '';
+    return sign + getCurrencySymbol() + Math.abs(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function renderCategoryBreakdown(containerId, categoryTotals, total) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    Object.keys(categoryTotals).sort((a, b) => categoryTotals[b] - categoryTotals[a]).forEach(category => {
+        const amount = categoryTotals[category];
+        const percentage = total > 0 ? (amount / total * 100) : 0;
+        const el = document.createElement('div');
+        el.className = 'category-item';
+        el.innerHTML = `
+            <div style="flex:1;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+                    <span style="font-weight:500;">${category}</span>
+                    <span style="font-family:var(--font-num); font-weight:600;">${formatCurrency(amount)}</span>
+                </div>
+                <div class="category-bar-track"><div class="category-bar" style="width:${Math.min(percentage,100)}%;"></div></div>
+            </div>`;
+        container.appendChild(el);
+    });
+}
+
+// ---------------- Pricing Summary tab: section & unit breakdowns ----------------
+function computeSectionBreakdown() {
+    const sections = [];
+    const stack = [];
+    let ungrouped = null;
+    const lineItems = items.filter(i => i.type !== 'headline');
+    const totalRiskAdjusted = lineItems.reduce((s, i) => s + i.quantity * i.unitCost * getRiskFactor(i.risk), 0);
+
+    items.forEach(item => {
+        while (stack.length && stack[stack.length - 1].level >= item.level) stack.pop();
+        if (item.type === 'headline') {
+            const sec = { title: item.title, level: item.level, wbsCode: item.wbsCode, itemCount: 0, base: 0, riskAdj: 0 };
+            sections.push(sec);
+            stack.push(sec);
+            return;
+        }
+        const base = item.quantity * item.unitCost;
+        const riskAdj = base * getRiskFactor(item.risk);
+        const targets = stack.length ? stack : [ungrouped || (ungrouped = { title: '(Ungrouped items)', level: 1, wbsCode: '', itemCount: 0, base: 0, riskAdj: 0 })];
+        targets.forEach(sec => { sec.itemCount++; sec.base += base; sec.riskAdj += riskAdj; });
+    });
+    if (ungrouped) sections.unshift(ungrouped);
+
+    return sections.map(s => ({ ...s, share: totalRiskAdjusted > 0 ? (s.riskAdj / totalRiskAdjusted * 100) : 0 }));
+}
+
+function computeUnitBreakdown() {
+    const lineItems = items.filter(i => i.type !== 'headline');
+    const totals = {};
+    let totalRiskAdjusted = 0;
+
+    lineItems.forEach(item => {
+        const base = item.quantity * item.unitCost;
+        const riskAdj = base * getRiskFactor(item.risk);
+        totalRiskAdjusted += riskAdj;
+        if (!totals[item.unit]) totals[item.unit] = { unit: item.unit, qty: 0, base: 0, riskAdj: 0 };
+        totals[item.unit].qty += item.quantity;
+        totals[item.unit].base += base;
+        totals[item.unit].riskAdj += riskAdj;
+    });
+
+    const contingencyPct = parseFloat(document.getElementById('contingency').value) || 0;
+    const profitPct = parseFloat(document.getElementById('profitMargin').value) || 0;
+
+    return Object.values(totals).map(t => {
+        const contingency = t.riskAdj * (contingencyPct / 100);
+        const costWithContingency = t.riskAdj + contingency;
+        const profit = costWithContingency * (profitPct / 100);
+        const totalPrice = costWithContingency + profit;
+        const share = totalRiskAdjusted > 0 ? (t.riskAdj / totalRiskAdjusted * 100) : 0;
+        return { ...t, contingency, profit, totalPrice, share };
+    }).sort((a, b) => b.totalPrice - a.totalPrice);
+}
+
+function renderSectionBreakdownTable() {
+    const container = document.getElementById('sectionBreakdownTable');
+    if (!container) return;
+    const sections = computeSectionBreakdown();
+    if (sections.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-secondary); font-size:0.85rem;">No category headlines or items yet — add some on the Pricing &amp; Planned Budget tab to see a per-section summary here.</p>';
+        return;
+    }
+    let html = '<table class="items-table"><thead><tr><th>WBS</th><th>Level</th><th>Section</th><th># Items</th><th>Base Cost</th><th>Risk-Adjusted Subtotal</th><th>% of Total</th></tr></thead><tbody>';
+    sections.forEach(s => {
+        html += `<tr><td><span class="wbs-code">${escapeHtml(s.wbsCode || '—')}</span></td><td>${levelBadge(s.level)}</td><td style="font-weight:${s.level === 1 ? 700 : 500}; padding-left:${0.5 + (s.level - 1) * 1.1}rem;">${escapeHtml(s.title)}</td><td class="calc-cell">${s.itemCount}</td><td class="calc-cell">${formatCurrency(s.base)}</td><td class="calc-cell">${formatCurrency(s.riskAdj)}</td><td class="calc-cell">${s.share.toFixed(1)}%</td></tr>`;
+    });
+    container.innerHTML = html + '</tbody></table>';
+}
+
+function renderUnitBreakdownTable() {
+    const container = document.getElementById('unitBreakdownTable');
+    if (!container) return;
+    const rows = computeUnitBreakdown();
+    if (rows.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-secondary); font-size:0.85rem;">No line items yet.</p>';
+        return;
+    }
+    let html = '<table class="items-table"><thead><tr><th>Unit</th><th>Total Qty</th><th>Base Cost</th><th>Risk-Adjusted Cost</th><th>Contingency</th><th>Profit</th><th>Total Price (incl. Profit)</th><th>% of Total</th></tr></thead><tbody>';
+    rows.forEach(r => {
+        html += `<tr><td style="font-weight:600;">${escapeHtml(r.unit)}</td><td class="calc-cell">${r.qty}</td><td class="calc-cell">${formatCurrency(r.base)}</td><td class="calc-cell">${formatCurrency(r.riskAdj)}</td><td class="calc-cell">${formatCurrency(r.contingency)}</td><td class="calc-cell">${formatCurrency(r.profit)}</td><td class="calc-cell">${formatCurrency(r.totalPrice)}</td><td class="calc-cell">${r.share.toFixed(1)}%</td></tr>`;
+    });
+    container.innerHTML = html + '</tbody></table>';
+}
+
+function renderPricingSummaryTab(baseCost, riskAdjustedCost, contingencyAmount, profitAmount, totalPrice, categoryTotals) {
+    const el = document.getElementById('psBaseCost');
+    if (!el) return;
+    el.textContent = formatCurrency(baseCost);
+    document.getElementById('psRiskAdjustedCost').textContent = formatCurrency(riskAdjustedCost);
+    document.getElementById('psContingencyAmount').textContent = formatCurrency(contingencyAmount);
+    document.getElementById('psProfitAmount').textContent = formatCurrency(profitAmount);
+    document.getElementById('psTotalPrice').textContent = formatCurrency(totalPrice);
+    renderCategoryBreakdown('categoryBreakdownSummaryTab', categoryTotals, riskAdjustedCost);
+    renderSectionBreakdownTable();
+    renderUnitBreakdownTable();
+    renderPriceBuildUp(baseCost, riskAdjustedCost, contingencyAmount, profitAmount, totalPrice);
+    renderCategoryDonut('categoryDonut', categoryTotals, riskAdjustedCost);
+}
+
+// ---------------- Budget: Plan vs Actual ----------------
+function allBudgetRows() {
+    const rows = items.filter(item => item.type !== 'headline').map(item => ({
+        id: item.id, source: 'pricing', wbsCode: item.wbsCode, level: item.level, description: item.description,
+        category: item.category, planQty: item.quantity, planCost: item.unitCost, planTotal: planTotalForItem(item)
+    }));
+    budgetExtras.forEach(ex => {
+        rows.push({ id: ex.id, source: 'extra', wbsCode: ex.wbsCode, level: levelFromCode(ex.wbsCode), description: ex.description, category: ex.category, planQty: ex.planQty, planCost: ex.planCost, planTotal: ex.planQty * ex.planCost });
+    });
+    return rows;
+}
+
+function buildBudgetDisplay() {
+    const out = [];
+    const all = allBudgetRows();
+    const rowById = {};
+    all.forEach(r => { rowById[String(r.id)] = r; });
+    items.forEach((it, idx) => {
+        if (it.type === 'headline') {
+            const end = subtreeEnd(idx);
+            let plan = 0, actual = 0;
+            for (let k = idx + 1; k < end; k++) {
+                if (items[k].type === 'headline') continue;
+                plan += planTotalForItem(items[k]);
+                const a = actuals[items[k].id] || { qty: 0, cost: 0 };
+                actual += a.qty * a.cost;
+            }
+            out.push({ kind: 'group', level: it.level, wbsCode: it.wbsCode, title: it.title, planTotal: plan, actualTotal: actual });
+        } else {
+            out.push({ kind: 'row', row: rowById[String(it.id)] });
+        }
+    });
+    const extras = all.filter(r => r.source === 'extra');
+    if (extras.length) {
+        out.push({ kind: 'sep', title: 'Additional budget lines' });
+        extras.forEach(r => out.push({ kind: 'row', row: r }));
+    }
+    return out;
+}
+
+function addBudgetRowManual() {
+    budgetExtras.push({ id: 'ex_' + (itemCounter++), wbsCode: '', description: '', category: 'Other', planQty: 0, planCost: 0 });
+    renderBudget();
+}
+
+function deleteBudgetExtra(id) {
+    budgetExtras = budgetExtras.filter(e => e.id !== id);
+    delete actuals[id];
+    delete timelines[id];
+    renderBudget();
+    renderDashboard();
+    scheduleSave();
+}
+
+function updateBudgetExtra(id, field, value) {
+    const ex = budgetExtras.find(e => e.id === id);
+    if (!ex) return;
+    if (field === 'planQty' || field === 'planCost') ex[field] = parseFloat(value) || 0;
+    else ex[field] = value;
+    renderBudget();
+    renderDashboard();
+    scheduleSave();
+}
+
+function updateActual(id, field, value) {
+    if (!actuals[id]) actuals[id] = { qty: 0, cost: 0 };
+    actuals[id][field] = parseFloat(value) || 0;
+    renderBudget();
+    renderDashboard();
+    scheduleSave();
+}
+
+function renderBudget() {
+    const tbody = document.getElementById('budgetTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const rows = allBudgetRows();
+
+    buildBudgetDisplay().forEach(entry => {
+        const tr = document.createElement('tr');
+        if (entry.kind === 'group') {
+            const variance = entry.planTotal - entry.actualTotal;
+            const pct = entry.planTotal > 0 ? (entry.actualTotal / entry.planTotal * 100) : (entry.actualTotal > 0 ? 100 : 0);
+            tr.className = 'headline-row lvl' + Math.min(entry.level, 4);
+            tr.innerHTML = `
+                <td><span class="wbs-code" style="margin-left:${(entry.level - 1) * 10}px">${escapeHtml(entry.wbsCode)}</span></td>
+                <td>${levelBadge(entry.level)}</td>
+                <td colspan="4" style="padding-left:${0.5 + (entry.level - 1) * 1.1}rem; font-weight:${entry.level === 1 ? 700 : 600}; color:var(--primary-dark);">${escapeHtml(entry.title || '(untitled)')}</td>
+                <td class="calc-cell">${formatCurrency(entry.planTotal)}</td>
+                <td colspan="2"></td>
+                <td class="calc-cell">${formatCurrency(entry.actualTotal)}</td>
+                <td class="calc-cell ${variance >= 0 ? 'variance-pos' : 'variance-neg'}">${formatCurrency(variance)}</td>
+                <td class="calc-cell">${pct.toFixed(0)}%</td>
+                <td></td>`;
+            tbody.appendChild(tr);
+            return;
+        }
+        if (entry.kind === 'sep') {
+            tr.className = 'headline-row lvl1';
+            tr.innerHTML = `<td colspan="13" style="font-weight:700; color:var(--primary-dark);">${escapeHtml(entry.title)}</td>`;
+            tbody.appendChild(tr);
+            return;
+        }
+        const row = entry.row;
+        const act = actuals[row.id] || { qty: 0, cost: 0 };
+        const actualTotal = act.qty * act.cost;
+        const variance = row.planTotal - actualTotal;
+        const pctUsed = row.planTotal > 0 ? (actualTotal / row.planTotal * 100) : (actualTotal > 0 ? 100 : 0);
+        const varClass = variance >= 0 ? 'variance-pos' : 'variance-neg';
+        if (row.source === 'pricing') {
+            tr.innerHTML = `
+                <td><span class="wbs-code" style="margin-left:${(row.level - 1) * 10}px">${escapeHtml(row.wbsCode || '—')}</span></td>
+                <td>${levelBadge(row.level)}</td>
+                <td>${escapeHtml(row.description || '(untitled)')}</td>
+                <td>${escapeHtml(row.category)}</td>
+                <td class="calc-cell">${row.planQty}</td>
+                <td class="calc-cell">${formatCurrency(row.planCost)}</td>
+                <td class="calc-cell">${formatCurrency(row.planTotal)}</td>
+                <td><input type="number" value="${act.qty}" min="0" step="1" onchange="updateActual(${JSON.stringify(row.id)}, 'qty', this.value)"></td>
+                <td><input type="number" value="${act.cost}" min="0" step="0.01" onchange="updateActual(${JSON.stringify(row.id)}, 'cost', this.value)"></td>
+                <td class="calc-cell">${formatCurrency(actualTotal)}</td>
+                <td class="calc-cell ${varClass}">${formatCurrency(variance)}</td>
+                <td class="calc-cell">${pctUsed.toFixed(0)}%</td>
+                <td><span style="font-size:0.75rem; color:var(--text-secondary);">from Pricing</span></td>
+            `;
+        } else {
+            tr.innerHTML = `
+                <td><input type="text" value="${escapeAttr(row.wbsCode)}" style="width:70px" placeholder="e.g. 9.1" onchange="updateBudgetExtra('${row.id}','wbsCode',this.value)"></td>
+                <td>${levelBadge(row.level)}</td>
+                <td><textarea rows="${descRows(row.description)}" onchange="updateBudgetExtra('${row.id}','description',this.value)">${escapeHtml(row.description)}</textarea></td>
+                <td>
+                    <select onchange="updateBudgetExtra('${row.id}','category',this.value)">
+                        ${categories.map(c => `<option value="${c}" ${row.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+                    </select>
+                </td>
+                <td><input type="number" value="${row.planQty}" min="0" step="1" onchange="updateBudgetExtra('${row.id}','planQty',this.value)"></td>
+                <td><input type="number" value="${row.planCost}" min="0" step="0.01" onchange="updateBudgetExtra('${row.id}','planCost',this.value)"></td>
+                <td class="calc-cell">${formatCurrency(row.planTotal)}</td>
+                <td><input type="number" value="${act.qty}" min="0" step="1" onchange="updateActual('${row.id}','qty',this.value)"></td>
+                <td><input type="number" value="${act.cost}" min="0" step="0.01" onchange="updateActual('${row.id}','cost',this.value)"></td>
+                <td class="calc-cell">${formatCurrency(actualTotal)}</td>
+                <td class="calc-cell ${varClass}">${formatCurrency(variance)}</td>
+                <td class="calc-cell">${pctUsed.toFixed(0)}%</td>
+                <td><button class="delete-btn" onclick="deleteBudgetExtra('${row.id}')">✕</button></td>
+            `;
+        }
+        tbody.appendChild(tr);
+    });
+
+    // Category breakdown: plan vs actual
+    const catTotals = {};
+    rows.forEach(row => {
+        const act = actuals[row.id] || { qty: 0, cost: 0 };
+        const actualTotal = act.qty * act.cost;
+        if (!catTotals[row.category]) catTotals[row.category] = { plan: 0, actual: 0 };
+        catTotals[row.category].plan += row.planTotal;
+        catTotals[row.category].actual += actualTotal;
+    });
+
+    const container = document.getElementById('budgetCategoryBreakdown');
+    if (container) {
+        container.innerHTML = '';
+        Object.keys(catTotals).sort((a, b) => catTotals[b].plan - catTotals[a].plan).forEach(cat => {
+            const { plan, actual } = catTotals[cat];
+            const pct = plan > 0 ? (actual / plan * 100) : (actual > 0 ? 100 : 0);
+            const over = actual > plan;
+            const el = document.createElement('div');
+            el.className = 'category-item';
+            el.innerHTML = `
+                <div style="flex:1;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+                        <span style="font-weight:500;">${cat}</span>
+                        <span style="font-family:var(--font-num); font-weight:600;">${formatCurrency(actual)} / ${formatCurrency(plan)} (${pct.toFixed(0)}%)</span>
+                    </div>
+                    <div class="category-bar-track"><div class="category-bar ${over ? 'over' : ''}" style="width:${Math.min(pct,100)}%;"></div></div>
+                </div>`;
+            container.appendChild(el);
+        });
+    }
+
+    renderTimelineSection();
+}
+
+// ---------------- Income & Revenue milestones ----------------
+function wbsCodeById(id) {
+    const it = items.find(i => String(i.id) === String(id));
+    if (it) return it.wbsCode;
+    const ex = budgetExtras.find(e => String(e.id) === String(id));
+    return ex ? ex.wbsCode : '';
+}
+
+function getWbsOptions(currentId) {
+    const opts = items.map(i => ({
+        id: String(i.id), level: i.level, headline: i.type === 'headline',
+        label: `${i.wbsCode} — ${i.type === 'headline' ? (i.title || '(untitled)') : (i.description || '(no description)')}`
+    }));
+    budgetExtras.forEach(e => opts.push({ id: String(e.id), level: levelFromCode(e.wbsCode), headline: false, label: `${e.wbsCode || '—'} — ${e.description || '(no description)'}` }));
+    if (currentId && !opts.some(o => o.id === String(currentId))) opts.unshift({ id: String(currentId), level: 1, headline: false, label: '(item not found)' });
+    return opts;
+}
+
+function addIncomeMilestone() {
+    incomeMilestones.push({
+        id: 'inc_' + (itemCounter++), linkId: '', description: '',
+        plannedAmount: 0, plannedDate: '', actualAmount: 0, actualDate: '', status: 'Planned'
+    });
+    calculate();
+}
+
+function deleteIncomeMilestone(id) {
+    incomeMilestones = incomeMilestones.filter(m => m.id !== id);
+    calculate();
+}
+
+function updateIncomeMilestone(id, field, value) {
+    const m = incomeMilestones.find(x => x.id === id);
+    if (!m) return;
+    if (field === 'plannedAmount' || field === 'actualAmount') m[field] = parseFloat(value) || 0;
+    else m[field] = value;
+    calculate();
+}
+
+function computeIncomeTotals() {
+    const plannedTotal = incomeMilestones.reduce((s, m) => s + (parseFloat(m.plannedAmount) || 0), 0);
+    const actualTotal = incomeMilestones.reduce((s, m) => s + (parseFloat(m.actualAmount) || 0), 0);
+    const outstanding = plannedTotal - actualTotal;
+    const pctCollected = plannedTotal > 0 ? (actualTotal / plannedTotal * 100) : 0;
+    return { plannedTotal, actualTotal, outstanding, pctCollected };
+}
+
+function renderIncomeTab() {
+    const tbody = document.getElementById('incomeTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    incomeMilestones.forEach(m => {
+        const wbsOptions = getWbsOptions(m.linkId);
+        const variance = (parseFloat(m.actualAmount) || 0) - (parseFloat(m.plannedAmount) || 0);
+        const varClass = variance >= 0 ? 'variance-pos' : 'variance-neg';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>
+                <select onchange="updateIncomeMilestone('${m.id}','linkId',this.value)">
+                    <option value="">— (Not linked)</option>
+                    ${wbsOptions.map(o => `<option value="${escapeAttr(o.id)}" ${String(m.linkId) === o.id ? 'selected' : ''}>${'\u00A0\u00A0'.repeat(o.level - 1)}${o.headline ? '▸ ' : ''}${escapeHtml(o.label)}</option>`).join('')}
+                </select>
+            </td>
+            <td><textarea rows="${descRows(m.description)}" onchange="updateIncomeMilestone('${m.id}','description',this.value)" placeholder="e.g. Milestone 1 - Mobilization">${escapeHtml(m.description)}</textarea></td>
+            <td><input type="number" value="${m.plannedAmount}" min="0" step="0.01" onchange="updateIncomeMilestone('${m.id}','plannedAmount',this.value)"></td>
+            <td><input type="date" value="${m.plannedDate || ''}" onchange="updateIncomeMilestone('${m.id}','plannedDate',this.value)"></td>
+            <td><input type="number" value="${m.actualAmount}" min="0" step="0.01" onchange="updateIncomeMilestone('${m.id}','actualAmount',this.value)"></td>
+            <td><input type="date" value="${m.actualDate || ''}" onchange="updateIncomeMilestone('${m.id}','actualDate',this.value)"></td>
+            <td>
+                <select onchange="updateIncomeMilestone('${m.id}','status',this.value)">
+                    ${['Planned', 'Invoiced', 'Paid'].map(s => `<option value="${s}" ${m.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+                </select>
+            </td>
+            <td class="calc-cell ${varClass}">${formatCurrency(variance)}</td>
+            <td><button class="delete-btn" onclick="deleteIncomeMilestone('${m.id}')">✕</button></td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    const totals = computeIncomeTotals();
+    const plannedEl = document.getElementById('incPlannedTotal');
+    if (!plannedEl) return;
+    plannedEl.textContent = formatCurrency(totals.plannedTotal);
+    document.getElementById('incActualTotal').textContent = formatCurrency(totals.actualTotal);
+    document.getElementById('incOutstanding').textContent = formatCurrency(totals.outstanding);
+    document.getElementById('incPctCollected').textContent = totals.pctCollected.toFixed(0) + '% collected';
+}
+
+// ---------------- Dashboard ----------------
+function renderDashboard() {
+    const kpiPlanTotal = document.getElementById('kpiPlanTotal');
+    if (!kpiPlanTotal) return;
+
+    const rows = allBudgetRows();
+    let planTotal = 0, actualTotal = 0, etc = 0;
+    const catTotals = {};
+
+    rows.forEach(row => {
+        const act = actuals[row.id] || { qty: 0, cost: 0 };
+        const actualRowTotal = act.qty * act.cost;
+        planTotal += row.planTotal;
+        actualTotal += actualRowTotal;
+        if (actualRowTotal < row.planTotal) etc += (row.planTotal - actualRowTotal);
+
+        if (!catTotals[row.category]) catTotals[row.category] = { plan: 0, actual: 0 };
+        catTotals[row.category].plan += row.planTotal;
+        catTotals[row.category].actual += actualRowTotal;
+    });
+
+    const incomeTotals = computeIncomeTotals();
+    const revenue = incomeMilestones.length > 0 ? incomeTotals.plannedTotal : (parseFloat(document.getElementById('revenueValue').value) || 0);
+    const actualRevenueReceived = incomeTotals.actualTotal;
+    const forecastAtCompletion = actualTotal + etc;
+    const grossMargin = revenue - actualTotal;
+    const grossMarginPct = revenue > 0 ? (grossMargin / revenue * 100) : 0;
+    const pctOfPlanSpent = planTotal > 0 ? (actualTotal / planTotal * 100) : 0;
+
+    kpiPlanTotal.textContent = formatCurrency(planTotal);
+    document.getElementById('kpiActualTotal').textContent = formatCurrency(actualTotal);
+    document.getElementById('kpiActualSub').textContent = pctOfPlanSpent.toFixed(0) + '% of plan spent';
+    document.getElementById('kpiActualCard').className = 'kpi-card ' + (actualTotal > planTotal ? 'danger' : '');
+    document.getElementById('kpiRevenue').textContent = formatCurrency(revenue);
+    document.getElementById('kpiMargin').textContent = formatCurrency(grossMargin);
+    document.getElementById('kpiMarginPct').textContent = grossMarginPct.toFixed(1) + '% margin';
+    document.getElementById('kpiMarginCard').className = 'kpi-card ' + (grossMargin < 0 ? 'danger' : 'success');
+
+    document.getElementById('plRevenue').textContent = formatCurrency(revenue);
+    document.getElementById('plActualRevenue').textContent = formatCurrency(actualRevenueReceived);
+    document.getElementById('plPlanCost').textContent = formatCurrency(planTotal);
+    document.getElementById('plActualCost').textContent = formatCurrency(actualTotal);
+    document.getElementById('plETC').textContent = formatCurrency(etc);
+    document.getElementById('plForecast').textContent = formatCurrency(forecastAtCompletion);
+    document.getElementById('plGrossMargin').textContent = formatCurrency(grossMargin);
+
+    const netCashPosition = actualRevenueReceived - actualTotal;
+    document.getElementById('cfCashIn').textContent = formatCurrency(actualRevenueReceived);
+    document.getElementById('cfCashOut').textContent = formatCurrency(actualTotal);
+    document.getElementById('cfNetPosition').textContent = formatCurrency(netCashPosition);
+    document.getElementById('cfOutstanding').textContent = formatCurrency(incomeTotals.outstanding);
+
+    renderPlanActualCategoryBars('dashboardCategoryBreakdown', catTotals);
+    renderCashFlowChart();
+    updateKeyStrip({ planTotal, actualTotal, pctSpent: pctOfPlanSpent, netCash: netCashPosition });
+}
+
+function renderPlanActualCategoryBars(containerId, catTotals) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = '';
+    Object.keys(catTotals).sort((a, b) => catTotals[b].plan - catTotals[a].plan).forEach(cat => {
+        const { plan, actual } = catTotals[cat];
+        const variance = plan - actual;
+        const pct = plan > 0 ? (actual / plan * 100) : (actual > 0 ? 100 : 0);
+        const over = actual > plan;
+        const el = document.createElement('div');
+        el.className = 'category-item';
+        el.innerHTML = `
+            <div style="flex:1;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+                    <span style="font-weight:500;">${cat}</span>
+                    <span style="font-family:var(--font-num); font-weight:600;" class="${variance >= 0 ? 'variance-pos' : 'variance-neg'}">${formatCurrency(variance)} variance</span>
+                </div>
+                <div class="category-bar-track"><div class="category-bar ${over ? 'over' : ''}" style="width:${Math.min(pct,100)}%;"></div></div>
+            </div>`;
+        container.appendChild(el);
+    });
+}
+
+function formatCurrencyShort(amount) {
+    const symbol = getCurrencySymbol();
+    const sign = amount < 0 ? '-' : '';
+    const abs = Math.abs(amount);
+    if (abs >= 1000000) return sign + symbol + (abs / 1000000).toFixed(1) + 'M';
+    if (abs >= 1000) return sign + symbol + (abs / 1000).toFixed(1) + 'k';
+    return sign + symbol + abs.toFixed(0);
+}
+
+// ---------------- Timeline & cash flow model ----------------
+const DAY_MS = 86400000;
+const COLORS = { plannedCost: '#ED8936', actualCost: '#E53E3E', plannedIn: '#2C5282', actualIn: '#38A169', netActual: '#805AD5' };
+
+function parseISO(d) {
+    if (!d) return null;
+    const p = String(d).split('-').map(Number);
+    if (p.length !== 3 || p.some(isNaN)) return null;
+    return Date.UTC(p[0], p[1] - 1, p[2]);
+}
+
+function todayISO() { return new Date().toISOString().split('T')[0]; }
+
+function monthKeyOf(ms) {
+    const dt = new Date(ms);
+    return dt.getUTCFullYear() + '-' + String(dt.getUTCMonth() + 1).padStart(2, '0');
+}
+
+function spreadAmount(amount, startStr, endStr, bucket) {
+    let s = parseISO(startStr), e = parseISO(endStr);
+    if (s === null && e === null) return false;
+    if (s === null) s = e;
+    if (e === null) e = s;
+    if (e < s) { const t = s; s = e; e = t; }
+    const totalDays = Math.round((e - s) / DAY_MS) + 1;
+    let cur = s;
+    while (cur <= e) {
+        const dt = new Date(cur);
+        const monthEnd = Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth() + 1, 0);
+        const segEnd = Math.min(monthEnd, e);
+        const days = Math.round((segEnd - cur) / DAY_MS) + 1;
+        const key = monthKeyOf(cur);
+        bucket[key] = (bucket[key] || 0) + amount * days / totalDays;
+        cur = segEnd + DAY_MS;
+    }
+    return true;
+}
+
+function computeCashflowModel() {
+    const plannedCost = {}, actualCost = {}, plannedIn = {}, actualIn = {};
+    const notes = { unschedPlanCost: 0, unschedActualCost: 0, unschedPlannedIn: 0, unschedActualIn: 0, actualOnPlanDates: 0 };
+    const today = todayISO();
+
+    allBudgetRows().forEach(row => {
+        const tl = timelines[row.id] || {};
+        const act = actuals[row.id] || { qty: 0, cost: 0 };
+        const actTotal = act.qty * act.cost;
+        if (row.planTotal > 0 && !spreadAmount(row.planTotal, tl.planStart, tl.planEnd, plannedCost)) notes.unschedPlanCost += row.planTotal;
+        if (actTotal > 0) {
+            let aS = tl.actStart, aE = tl.actEnd, onPlan = false;
+            if (aS || aE) {
+                if (aS && !aE) aE = parseISO(aS) < parseISO(today) ? today : aS;
+                if (!aS) aS = aE;
+            } else { aS = tl.planStart; aE = tl.planEnd; onPlan = true; }
+            if (!spreadAmount(actTotal, aS, aE, actualCost)) notes.unschedActualCost += actTotal;
+            else if (onPlan) notes.actualOnPlanDates += actTotal;
+        }
+    });
+
+    incomeMilestones.forEach(m => {
+        const pa = parseFloat(m.plannedAmount) || 0, aa = parseFloat(m.actualAmount) || 0;
+        if (pa > 0) {
+            const t = parseISO(m.plannedDate);
+            if (t === null) notes.unschedPlannedIn += pa; else { const k = monthKeyOf(t); plannedIn[k] = (plannedIn[k] || 0) + pa; }
+        }
+        if (aa > 0) {
+            const t = parseISO(m.actualDate);
+            if (t === null) notes.unschedActualIn += aa; else { const k = monthKeyOf(t); actualIn[k] = (actualIn[k] || 0) + aa; }
+        }
+    });
+
+    const keys = [...Object.keys(plannedCost), ...Object.keys(actualCost), ...Object.keys(plannedIn), ...Object.keys(actualIn)].sort();
+    const months = [];
+    if (keys.length) {
+        let [y, m] = keys[0].split('-').map(Number);
+        const [ey, em] = keys[keys.length - 1].split('-').map(Number);
+        while (y < ey || (y === ey && m <= em)) {
+            months.push({ key: y + '-' + String(m).padStart(2, '0') });
+            m++; if (m > 12) { m = 1; y++; }
+        }
+    }
+
+    let cpc = 0, cac = 0, cpi = 0, cai = 0, lastActual = -1;
+    months.forEach((mo, i) => {
+        mo.plannedCost = plannedCost[mo.key] || 0;
+        mo.actualCost = actualCost[mo.key] || 0;
+        mo.plannedIn = plannedIn[mo.key] || 0;
+        mo.actualIn = actualIn[mo.key] || 0;
+        cpc += mo.plannedCost; cac += mo.actualCost; cpi += mo.plannedIn; cai += mo.actualIn;
+        mo.netPlanned = mo.plannedIn - mo.plannedCost;
+        mo.netActual = mo.actualIn - mo.actualCost;
+        mo.cumPlannedCost = cpc; mo.cumPlannedIn = cpi; mo.cumNetPlanned = cpi - cpc;
+        mo._cac = cac; mo._cai = cai;
+        if (mo.actualCost > 0.005 || mo.actualIn > 0.005) lastActual = i;
+    });
+    months.forEach((mo, i) => {
+        const live = i <= lastActual;
+        mo.cumActualCost = live ? mo._cac : null;
+        mo.cumActualIn = live ? mo._cai : null;
+        mo.cumNetActual = live ? mo._cai - mo._cac : null;
+    });
+
+    const analyse = arr => {
+        let minV = 0, minI = -1;
+        arr.forEach((v, i) => { if (v !== null && v < minV - 0.005) { minV = v; minI = i; } });
+        if (minI < 0) return { deficit: false };
+        let be = null;
+        for (let i = minI; i < arr.length; i++) { if (arr[i] !== null && arr[i] >= 0) { be = months[i].key; break; } }
+        return { deficit: true, peak: -minV, peakMonth: months[minI].key, breakEven: be };
+    };
+
+    return {
+        months, notes, lastActual,
+        planned: analyse(months.map(m => m.cumNetPlanned)),
+        actual: analyse(months.map(m => m.cumNetActual))
+    };
+}
+
+function drawTimelineChart(containerId, labels, series, emptyMsg) {
+    const c = document.getElementById(containerId);
+    if (!c) return;
+    if (!labels.length) {
+        c.innerHTML = `<p style="color:var(--text-secondary); font-size:0.85rem;">${emptyMsg}</p>`;
+        return;
+    }
+    const W = 700, H = 280, padL = 74, padR = 16, padT = 16, padB = 46;
+    const plotW = W - padL - padR, plotH = H - padT - padB;
+    const vals = series.flatMap(s => s.values.filter(v => v !== null));
+    let max = Math.max(0, ...vals), min = Math.min(0, ...vals);
+    if (max === min) max = min + 1;
+    const y = v => padT + plotH - ((v - min) / (max - min)) * plotH;
+    const n = labels.length, slot = plotW / n;
+    const cx = i => padL + slot * (i + 0.5);
+
+    let svg = '';
+    for (let i = 0; i <= 4; i++) {
+        const v = min + (max - min) * i / 4;
+        const yy = y(v).toFixed(1);
+        svg += `<line x1="${padL}" y1="${yy}" x2="${W - padR}" y2="${yy}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,4"/>`;
+        svg += `<text x="${padL - 8}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--text-secondary)">${formatCurrencyShort(v)}</text>`;
+    }
+    if (min < 0) svg += `<line x1="${padL}" y1="${y(0).toFixed(1)}" x2="${W - padR}" y2="${y(0).toFixed(1)}" stroke="var(--text-secondary)" stroke-width="1.3"/>`;
+
+    const bars = series.filter(s => s.type === 'bar');
+    const groupW = slot * 0.78, bw = groupW / Math.max(1, bars.length);
+    bars.forEach((s, bi) => s.values.forEach((v, i) => {
+        if (v === null || Math.abs(v) < 0.005) return;
+        const x0 = padL + slot * i + (slot - groupW) / 2 + bi * bw;
+        const y0 = y(Math.max(v, 0)), y1 = y(Math.min(v, 0));
+        svg += `<rect x="${x0.toFixed(1)}" y="${y0.toFixed(1)}" width="${Math.max(1, bw - 1).toFixed(1)}" height="${Math.max(0.5, y1 - y0).toFixed(1)}" rx="3" fill="${s.color}" opacity="0.9"><title>${labels[i]} — ${s.name}: ${formatCurrency(v)}</title></rect>`;
+    }));
+
+    series.filter(s => s.type === 'line').forEach(s => {
+        let d = '', pen = false, pts = '';
+        s.values.forEach((v, i) => {
+            if (v === null) { pen = false; return; }
+            d += `${pen ? 'L' : 'M'} ${cx(i).toFixed(1)} ${y(v).toFixed(1)} `;
+            pen = true;
+            pts += `<circle cx="${cx(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="2.6" fill="${s.color}"><title>${labels[i]} — ${s.name}: ${formatCurrency(v)}</title></circle>`;
+        });
+        if (d) svg += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2.4" ${s.dash ? `stroke-dasharray="${s.dash}"` : ''}/>` + pts;
+    });
+
+    const step = Math.ceil(n / 8);
+    labels.forEach((l, i) => {
+        if (i % step === 0) svg += `<text x="${cx(i).toFixed(1)}" y="${H - padB + 16}" text-anchor="middle" font-size="10" fill="var(--text-secondary)">${l}</text>`;
+    });
+    svg += `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H - padB}" stroke="var(--text-secondary)" stroke-width="1"/>`;
+
+    const legend = series.map(s => `<span><i style="border-top:${s.type === 'bar' ? '8px solid' : '2.5px ' + (s.dash ? 'dashed' : 'solid')} ${s.color}"></i>${s.name}</span>`).join('');
+    c.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%; height:auto;">${svg}</svg><div class="chart-legend">${legend}</div>`;
+}
+
+function cumulativeSeries(model) {
+    return [
+        { name: 'Planned cash in (cum.)', type: 'line', dash: '6,3', color: COLORS.plannedIn, values: model.months.map(m => m.cumPlannedIn) },
+        { name: 'Actual cash received (cum.)', type: 'line', color: COLORS.actualIn, values: model.months.map(m => m.cumActualIn) },
+        { name: 'Planned cost (cum.)', type: 'line', dash: '6,3', color: COLORS.plannedCost, values: model.months.map(m => m.cumPlannedCost) },
+        { name: 'Actual cost (cum.)', type: 'line', color: COLORS.actualCost, values: model.months.map(m => m.cumActualCost) }
+    ];
+}
+
+function renderCashFlowChart() {
+    const model = computeCashflowModel();
+    drawTimelineChart('cashFlowChart', model.months.map(m => m.key), cumulativeSeries(model),
+        'Add income milestone dates (Income &amp; Revenue tab) and planned/actual dates on budget lines (Budget tab) to see the cash flow chart here.');
+    const n = model.notes;
+    if (n.unschedActualCost > 0) {
+        document.getElementById('cashFlowChart').insertAdjacentHTML('beforeend',
+            `<p style="color:var(--text-secondary); font-size:0.8rem; margin-top:0.4rem;">${formatCurrency(n.unschedActualCost)} of actual cost has no dates and is not plotted — set dates on the Budget tab.</p>`);
+    }
+}
+
+function renderCashflowAnalysis() {
+    const sum = document.getElementById('cfaSummary');
+    if (!sum) return;
+    const model = computeCashflowModel();
+    const labels = model.months.map(m => m.key);
+    const empty = 'Add planned/actual dates to budget lines (and dates to income milestones) to see this chart.';
+
+    drawTimelineChart('expenseTimelineChart', labels, [
+        { name: 'Planned cost', type: 'bar', color: COLORS.plannedCost, values: model.months.map(m => m.plannedCost) },
+        { name: 'Actual cost', type: 'bar', color: COLORS.actualCost, values: model.months.map(m => m.actualCost) }
+    ], empty);
+    drawTimelineChart('cumulativeCashChart', labels, cumulativeSeries(model), empty);
+    drawTimelineChart('netCashChart', labels, [
+        { name: 'Net position — planned', type: 'line', dash: '6,3', color: COLORS.plannedIn, values: model.months.map(m => m.cumNetPlanned) },
+        { name: 'Net position — actual', type: 'line', color: COLORS.netActual, values: model.months.map(m => m.cumNetActual) }
+    ], empty);
+
+    const hasData = model.months.length > 0;
+    const peak = a => !hasData ? '—' : (a.deficit ? `${formatCurrency(a.peak)} (${a.peakMonth})` : 'No deficit');
+    const be = a => !hasData ? '—' : (!a.deficit ? 'No deficit' : (a.breakEven || 'Not reached'));
+    sum.innerHTML = `
+        <div class="summary-item bad"><span class="summary-label">Peak funding need — planned</span><span class="summary-value">${peak(model.planned)}</span></div>
+        <div class="summary-item bad"><span class="summary-label">Peak funding need — actual</span><span class="summary-value">${peak(model.actual)}</span></div>
+        <div class="summary-item good"><span class="summary-label">Break-even month — planned</span><span class="summary-value">${be(model.planned)}</span></div>
+        <div class="summary-item good"><span class="summary-label">Break-even month — actual</span><span class="summary-value">${be(model.actual)}</span></div>`;
+
+    const tableEl = document.getElementById('cashflowMonthlyTable');
+    if (!hasData) {
+        tableEl.innerHTML = `<p style="color:var(--text-secondary); font-size:0.85rem;">${empty}</p>`;
+    } else {
+        const cell = v => v === null ? '—' : formatCurrency(v);
+        let html = '<table class="items-table"><thead><tr><th>Month</th><th>Planned Cost</th><th>Actual Cost</th><th>Planned Cash In</th><th>Actual Cash In</th><th>Net Planned</th><th>Net Actual</th><th>Cum. Net Planned</th><th>Cum. Net Actual</th></tr></thead><tbody>';
+        model.months.forEach((m, i) => {
+            const live = i <= model.lastActual;
+            html += `<tr><td style="font-weight:600;">${m.key}</td><td class="calc-cell">${formatCurrency(m.plannedCost)}</td><td class="calc-cell">${formatCurrency(m.actualCost)}</td><td class="calc-cell">${formatCurrency(m.plannedIn)}</td><td class="calc-cell">${formatCurrency(m.actualIn)}</td><td class="calc-cell">${formatCurrency(m.netPlanned)}</td><td class="calc-cell">${live ? formatCurrency(m.netActual) : '—'}</td><td class="calc-cell ${m.cumNetPlanned < 0 ? 'variance-neg' : 'variance-pos'}">${formatCurrency(m.cumNetPlanned)}</td><td class="calc-cell ${m.cumNetActual !== null && m.cumNetActual < 0 ? 'variance-neg' : 'variance-pos'}">${cell(m.cumNetActual)}</td></tr>`;
+        });
+        tableEl.innerHTML = html + '</tbody></table>';
+    }
+
+    const n = model.notes, lines = [];
+    if (n.unschedPlanCost > 0) lines.push(`${formatCurrency(n.unschedPlanCost)} of planned cost has no planned dates and is not shown.`);
+    if (n.unschedActualCost > 0) lines.push(`${formatCurrency(n.unschedActualCost)} of actual cost has no dates (actual or planned) and is not shown.`);
+    if (n.actualOnPlanDates > 0) lines.push(`${formatCurrency(n.actualOnPlanDates)} of actual cost has no actual dates, so it is placed on the planned dates.`);
+    if (n.unschedPlannedIn > 0) lines.push(`${formatCurrency(n.unschedPlannedIn)} of planned income has no planned date and is not shown.`);
+    if (n.unschedActualIn > 0) lines.push(`${formatCurrency(n.unschedActualIn)} of received income has no actual date and is not shown.`);
+    document.getElementById('cfaNotes').innerHTML = lines.length ? `<div class="warn-box">⚠️ ${lines.join('<br>')}</div>` : '';
+}
+
+// ---------------- Budget timeline table ----------------
+function daysBetween(a, b) { return Math.round((parseISO(b) - parseISO(a)) / DAY_MS); }
+function fmtDays(d) { return d === 0 ? 'on time' : (d > 0 ? `+${d}d late` : `${-d}d early`); }
+
+function scheduleStatus(tl, actTotal) {
+    const hasPlan = tl.planStart || tl.planEnd, hasAct = tl.actStart || tl.actEnd;
+    if (!hasPlan) return { text: hasAct ? 'Actual dated, no plan' : 'Not scheduled', cls: '' };
+    if (hasAct) {
+        const parts = []; let late = false;
+        if (tl.planStart && tl.actStart) { const d = daysBetween(tl.planStart, tl.actStart); parts.push('Start ' + fmtDays(d)); if (d > 0) late = true; }
+        if (tl.planEnd && tl.actEnd) { const d = daysBetween(tl.planEnd, tl.actEnd); parts.push('End ' + fmtDays(d)); if (d > 0) late = true; }
+        else if (tl.actStart && !tl.actEnd) parts.push('In progress');
+        return { text: parts.join(' · ') || 'Actual dated', cls: late ? 'variance-neg' : 'variance-pos' };
+    }
+    return { text: actTotal > 0 ? 'Actual on plan dates' : 'Not started', cls: '' };
+}
+
+function updateTimeline(id, field, value) {
+    if (!timelines[id]) timelines[id] = {};
+    timelines[id][field] = value;
+    renderTimelineSection();
+    renderDashboard();
+    scheduleSave();
+}
+
+function fillPlanDatesFromProject() {
+    const s = document.getElementById('projStart').value, e = document.getElementById('projEnd').value;
+    if (!s || !e) { alert('Set the Project Start and Project End dates first.'); return; }
+    allBudgetRows().forEach(row => {
+        const tl = timelines[row.id] || (timelines[row.id] = {});
+        if (!tl.planStart && !tl.planEnd) { tl.planStart = s; tl.planEnd = e; }
+    });
+    renderTimelineSection(); renderDashboard(); scheduleSave();
+}
+
+function copyPlanToActualDates() {
+    allBudgetRows().forEach(row => {
+        const act = actuals[row.id] || { qty: 0, cost: 0 };
+        const tl = timelines[row.id];
+        if (tl && act.qty * act.cost > 0 && !tl.actStart && !tl.actEnd && (tl.planStart || tl.planEnd)) {
+            tl.actStart = tl.planStart || tl.planEnd;
+            tl.actEnd = tl.planEnd || tl.planStart;
+        }
+    });
+    renderTimelineSection(); renderDashboard(); scheduleSave();
+}
+
+function renderTimelineSection() {
+    const tbody = document.getElementById('timelineTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    allBudgetRows().forEach(row => {
+        const tl = timelines[row.id] || {};
+        const act = actuals[row.id] || { qty: 0, cost: 0 };
+        const actTotal = act.qty * act.cost;
+        const sched = scheduleStatus(tl, actTotal);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><span style="font-family:var(--font-num);">${escapeHtml(row.wbsCode || '—')}</span></td>
+            <td>${escapeHtml(row.description || '(untitled)')}</td>
+            <td class="calc-cell">${formatCurrency(row.planTotal)}</td>
+            <td><input type="date" value="${tl.planStart || ''}" onchange="updateTimeline('${row.id}','planStart',this.value)"></td>
+            <td><input type="date" value="${tl.planEnd || ''}" onchange="updateTimeline('${row.id}','planEnd',this.value)"></td>
+            <td class="calc-cell">${formatCurrency(actTotal)}</td>
+            <td><input type="date" value="${tl.actStart || ''}" onchange="updateTimeline('${row.id}','actStart',this.value)"></td>
+            <td><input type="date" value="${tl.actEnd || ''}" onchange="updateTimeline('${row.id}','actEnd',this.value)"></td>
+            <td class="${sched.cls}" style="font-size:0.8rem; white-space:nowrap;">${sched.text}</td>`;
+        tbody.appendChild(tr);
+    });
+    renderCashflowAnalysis();
+    renderSchedule();
+}
+
+// ---------------- Auto schedule (recommended) ----------------
+let lastAutoSchedule = null;
+
+function isWeekendMs(ms) { const d = new Date(ms).getUTCDay(); return d === 0 || d === 6; }
+function nextWorkdayMs(ms) { while (isWeekendMs(ms)) ms += DAY_MS; return ms; }
+function countWorkdays(s, e) { let n = 0; for (let t = s; t <= e; t += DAY_MS) if (!isWeekendMs(t)) n++; return n; }
+
+function estimateWorkdays(item) {
+    const q = Math.max(0, parseFloat(item.quantity) || 0);
+    let d;
+    switch (item.unit) {
+        case 'Hours': d = Math.ceil(q / 8); break;
+        case 'Days': case 'Shift': case 'Sessions': d = Math.ceil(q); break;
+        case 'Months': d = Math.round(q * 21); break;
+        default: d = 5;
+    }
+    return Math.max(1, Math.min(260, d || 1));
+}
+
+function computeRecommendedSchedule(o) {
+    normalizeLevels();
+    const ctx = scheduleContext();
+    const wd = !!o.skipWeekends;
+    const notes = [];
+    let startMs = parseISO(o.start);
+    if (startMs === null) startMs = parseISO(todayISO());
+    if (wd) startMs = nextWorkdayMs(startMs);
+    const endLimit = parseISO(o.end);
+    const nextStart = e => { const n = e + DAY_MS; return wd ? nextWorkdayMs(n) : n; };
+    const addDur = (s, n) => {
+        if (!wd) return s + (n - 1) * DAY_MS;
+        let e = s, c = 1;
+        while (c < n) { e += DAY_MS; if (!isWeekendMs(e)) c++; }
+        return e;
+    };
+    const spanDays = (s, e) => wd ? countWorkdays(s, e) : Math.round((e - s) / DAY_MS) + 1;
+
+    const tasks = [];
+    items.forEach(it => { if (it.type === 'line') tasks.push({ id: String(it.id), item: it }); });
+    const extras = budgetExtras.map(e => String(e.id));
+
+    const fixed = new Set();
+    if (o.scope === 'missing') tasks.forEach(t => { if (ctx.planRange(t.id)) fixed.add(t.id); });
+
+    const dur = {};
+    tasks.forEach(t => {
+        const ex = ctx.planRange(t.id);
+        let n;
+        if (o.keepDurations && ex) n = spanDays(ex.s, ex.e);
+        else n = wd ? estimateWorkdays(t.item) : Math.max(1, Math.round(estimateWorkdays(t.item) * 7 / 5));
+        dur[t.id] = Math.max(1, n);
+    });
+
+    const implicit = {};
+    const addImplicit = (prev, next) => next.forEach(n => { const set = implicit[n] || (implicit[n] = new Set()); prev.forEach(p => set.add(p)); });
+    const processRange = (i0, i1) => {
+        const blocks = [];
+        let cur = [];
+        let i = i0;
+        while (i < i1) {
+            const it = items[i];
+            if (it.type === 'line') { cur.push(String(it.id)); i++; continue; }
+            if (cur.length) { blocks.push(cur); cur = []; }
+            const e = Math.min(subtreeEnd(i), i1);
+            const leaves = processRange(i + 1, e);
+            if (leaves.length) blocks.push(leaves);
+            i = e;
+        }
+        if (cur.length) blocks.push(cur);
+        for (let k = 1; k < blocks.length; k++) addImplicit(blocks[k - 1], blocks[k]);
+        return blocks.flat();
+    };
+    processRange(0, items.length);
+
+    const solve = (useImplicit) => {
+        const st = {}, en = {};
+        tasks.forEach(t => {
+            if (fixed.has(t.id)) { const r = ctx.planRange(t.id); st[t.id] = r.s; en[t.id] = r.e; }
+            else { st[t.id] = startMs; en[t.id] = addDur(startMs, dur[t.id]); }
+        });
+        for (let iter = 0; iter <= tasks.length + 2; iter++) {
+            let changed = false;
+            tasks.forEach(t => {
+                if (fixed.has(t.id)) return;
+                let req = startMs;
+                const consider = p => {
+                    if (en[p] !== undefined) req = Math.max(req, nextStart(en[p]));
+                    else { const r = ctx.planRange(p); if (r) req = Math.max(req, nextStart(r.e)); }
+                };
+                ctx.preds(t.id).forEach(consider);
+                if (useImplicit && implicit[t.id]) implicit[t.id].forEach(consider);
+                if (req !== st[t.id]) { st[t.id] = req; en[t.id] = addDur(req, dur[t.id]); changed = true; }
+            });
+            if (!changed) return { ok: true, st, en };
+        }
+        return { ok: false, st, en };
+    };
+
+    let useImplicit = true;
+    let res = solve(true);
+    if (!res.ok) {
+        useImplicit = false;
+        res = solve(false);
+        notes.push('Some dependencies conflict with the WBS order, so tasks were scheduled by their dependencies only.');
+        if (!res.ok) notes.push('A circular dependency was found; some dates may be unreliable.');
+    }
+
+    const finishOf = r => tasks.reduce((m, t) => Math.max(m, r.en[t.id]), startMs);
+    if (o.fit && endLimit !== null && endLimit > startMs && tasks.some(t => !fixed.has(t.id))) {
+        const avail = spanDays(startMs, endLimit);
+        for (let pass = 0; pass < 3; pass++) {
+            const span = spanDays(startMs, finishOf(res));
+            if (span <= 0) break;
+            const f = Math.max(0.2, Math.min(5, avail / span));
+            if (Math.abs(f - 1) < 0.02) break;
+            tasks.forEach(t => { if (!fixed.has(t.id)) dur[t.id] = Math.max(1, Math.round(dur[t.id] * f)); });
+            res = solve(useImplicit);
+        }
+    }
+
+    const finishMs = finishOf(res);
+    const rows = [];
+    tasks.forEach(t => {
+        const r = ctx.byId[t.id];
+        const ex = ctx.planRange(t.id);
+        const s = res.st[t.id], e = res.en[t.id];
+        let status = 'New';
+        if (fixed.has(t.id)) status = 'Kept';
+        else if (ex) status = (ex.s === s && ex.e === e) ? 'Unchanged' : 'Moved';
+        rows.push({ id: t.id, wbs: r ? r.wbsCode : '', label: r ? (r.description || '(untitled)') : '', start: isoOf(s), end: isoOf(e), days: Math.round((e - s) / DAY_MS) + 1, status, fixed: fixed.has(t.id) });
+    });
+    extras.forEach(id => {
+        const r = ctx.byId[id];
+        if (!r) return;
+        const ex = ctx.planRange(id);
+        if (o.scope === 'missing' && ex) { rows.push({ id, wbs: r.wbsCode, label: r.description || '(untitled)', start: isoOf(ex.s), end: isoOf(ex.e), days: Math.round((ex.e - ex.s) / DAY_MS) + 1, status: 'Kept', fixed: true }); return; }
+        const s = startMs, e = Math.max(startMs, finishMs);
+        rows.push({ id, wbs: r.wbsCode, label: (r.description || '(untitled)') + ' (spans the project)', start: isoOf(s), end: isoOf(e), days: Math.round((e - s) / DAY_MS) + 1, status: ex ? 'Moved' : 'New', fixed: false });
+    });
+
+    const milestones = [];
+    if (o.milestones) {
+        items.forEach((it, idx) => {
+            if (it.type !== 'headline' || it.level !== 1) return;
+            let bestId = null, bestEnd = -1;
+            for (let k = idx + 1; k < subtreeEnd(idx); k++) {
+                if (items[k].type !== 'line') continue;
+                const id = String(items[k].id);
+                if (res.en[id] > bestEnd) { bestEnd = res.en[id]; bestId = id; }
+            }
+            if (bestId === null) return;
+            const name = (it.title || 'Phase') + ' complete';
+            if (scheduleMilestones.some(m => String(m.name).trim().toLowerCase() === name.toLowerCase())) return;
+            milestones.push({ name, taskId: bestId, date: isoOf(bestEnd) });
+        });
+    }
+
+    return { rows, startISO: isoOf(startMs), finishISO: tasks.length ? isoOf(finishMs) : '', milestones, notes, taskCount: tasks.length, spanDays: tasks.length ? spanDays(startMs, finishMs) : 0, workdays: wd };
+}
+
+function readAutoOptions() {
+    return {
+        start: document.getElementById('asStart').value,
+        end: document.getElementById('asEnd').value,
+        fit: document.getElementById('asFit').checked,
+        scope: document.getElementById('asScope').value,
+        keepDurations: document.getElementById('asKeep').checked,
+        skipWeekends: document.getElementById('asWeekends').checked,
+        milestones: document.getElementById('asMilestones').checked
+    };
+}
+
+function openAutoSchedule() {
+    const ctx = scheduleContext();
+    if (!ctx.rows.length) { alert('Add some budget items on the Pricing & Planned Budget tab first.'); return; }
+    let start = document.getElementById('projStart').value;
+    if (!start) {
+        const starts = ctx.rows.map(r => ctx.planRange(r.id)).filter(Boolean).map(r => r.s);
+        start = starts.length ? isoOf(Math.min(...starts)) : todayISO();
+    }
+    const end = document.getElementById('projEnd').value;
+    document.getElementById('asStart').value = start;
+    document.getElementById('asEnd').value = end;
+    document.getElementById('asFit').checked = !!end;
+    const missing = ctx.rows.filter(r => !ctx.planRange(r.id)).length;
+    document.getElementById('asScope').value = missing ? 'missing' : 'all';
+    document.getElementById('asMilestones').checked = false;
+    document.getElementById('autoSchedModal').classList.add('open');
+    renderAutoPreview();
+}
+
+function closeAutoSchedule() { document.getElementById('autoSchedModal').classList.remove('open'); }
+
+function renderAutoPreview() {
+    const o = readAutoOptions();
+    const res = computeRecommendedSchedule(o);
+    const sum = document.getElementById('autoSchedSummary');
+    const prev = document.getElementById('autoSchedPreview');
+    if (!res.rows.length) { sum.innerHTML = ''; prev.innerHTML = '<p style="color:var(--text-secondary);">No tasks to schedule.</p>'; return; }
+    const changed = res.rows.filter(r => !r.fixed && r.status !== 'Unchanged').length;
+    let html = `<div class="info-box" style="margin:0.8rem 0;"><strong>${res.startISO} → ${res.finishISO}</strong> (${res.spanDays} ${res.workdays ? 'working' : 'calendar'} days). ${changed} task${changed === 1 ? '' : 's'} will get new planned dates${res.milestones.length ? `, plus ${res.milestones.length} phase milestone${res.milestones.length === 1 ? '' : 's'}` : ''}.</div>`;
+    const endLimit = parseISO(o.end);
+    if (endLimit !== null && parseISO(res.finishISO) > endLimit) html += `<div class="warn-box" style="margin:0 0 0.8rem;">⚠️ The schedule finishes after your project end date (${o.end}). Tick “Fit the schedule to the project end date” to compress it.</div>`;
+    res.notes.forEach(n => { html += `<div class="warn-box" style="margin:0 0 0.8rem;">⚠️ ${escapeHtml(n)}</div>`; });
+    sum.innerHTML = html;
+    const statusCls = { New: 'variance-pos', Moved: 'variance-neg', Kept: '', Unchanged: '' };
+    let t = '<table class="items-table"><thead><tr><th>WBS</th><th>Task</th><th>Start</th><th>End</th><th>Days</th><th>Status</th></tr></thead><tbody>';
+    res.rows.forEach(r => { t += `<tr><td><span class="wbs-code">${escapeHtml(r.wbs || '—')}</span></td><td>${escapeHtml(r.label)}</td><td class="calc-cell">${r.start}</td><td class="calc-cell">${r.end}</td><td class="calc-cell">${r.days}d</td><td class="${statusCls[r.status] || ''}" style="font-size:0.8rem;">${r.status}</td></tr>`; });
+    res.milestones.forEach(m => { t += `<tr><td></td><td>◆ ${escapeHtml(m.name)}</td><td class="calc-cell" colspan="2">${m.date}</td><td></td><td class="variance-pos" style="font-size:0.8rem;">New milestone</td></tr>`; });
+    prev.innerHTML = t + '</tbody></table>';
+}
+
+function applyAutoSchedule() {
+    const o = readAutoOptions();
+    const res = computeRecommendedSchedule(o);
+    if (!res.rows.length) { closeAutoSchedule(); return; }
+    lastAutoSchedule = {
+        timelines: JSON.parse(JSON.stringify(timelines)),
+        milestones: JSON.parse(JSON.stringify(scheduleMilestones)),
+        projStart: document.getElementById('projStart').value,
+        projEnd: document.getElementById('projEnd').value
+    };
+    let n = 0;
+    res.rows.forEach(r => {
+        if (r.fixed) return;
+        const tl = timelines[r.id] || (timelines[r.id] = {});
+        tl.planStart = r.start;
+        tl.planEnd = r.end;
+        n++;
+    });
+    res.milestones.forEach(m => scheduleMilestones.push({ id: 'ms_' + (itemCounter++), name: m.name, date: m.date, taskId: m.taskId, follow: true, done: false }));
+    if (!document.getElementById('projStart').value) document.getElementById('projStart').value = res.startISO;
+    if (!document.getElementById('projEnd').value) document.getElementById('projEnd').value = res.finishISO;
+    closeAutoSchedule();
+    const msg = document.getElementById('ganttMsg');
+    if (msg) msg.textContent = `Scheduled ${n} task${n === 1 ? '' : 's'}: ${res.startISO} → ${res.finishISO}.`;
+    const undo = document.getElementById('undoAutoBtn');
+    if (undo) undo.style.display = '';
+    renderTimelineSection();
+    renderDashboard();
+    scheduleSave();
+}
+
+function undoAutoSchedule() {
+    if (!lastAutoSchedule) return;
+    timelines = lastAutoSchedule.timelines;
+    scheduleMilestones = lastAutoSchedule.milestones;
+    document.getElementById('projStart').value = lastAutoSchedule.projStart;
+    document.getElementById('projEnd').value = lastAutoSchedule.projEnd;
+    lastAutoSchedule = null;
+    document.getElementById('undoAutoBtn').style.display = 'none';
+    const msg = document.getElementById('ganttMsg');
+    if (msg) msg.textContent = 'Auto schedule undone.';
+    renderTimelineSection();
+    renderDashboard();
+    scheduleSave();
+}
+
+// ---------------- Schedule: Gantt chart, milestones, dependencies ----------------
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function isoOf(ms) { return new Date(ms).toISOString().split('T')[0]; }
+function shortLabel(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+function rowLabel(r) { return (r.wbsCode ? r.wbsCode + ' — ' : '') + (r.description || '(untitled)'); }
+
+function scheduleContext() {
+    const rows = allBudgetRows();
+    const byId = {};
+    rows.forEach(r => { byId[String(r.id)] = r; });
+    const preds = id => {
+        const t = timelines[id];
+        if (!t || !Array.isArray(t.preds)) return [];
+        return t.preds.map(String).filter(p => byId[p] && p !== String(id));
+    };
+    const planRange = id => {
+        const t = timelines[id] || {};
+        let s = parseISO(t.planStart), e = parseISO(t.planEnd);
+        if (s === null && e === null) return null;
+        if (s === null) s = e;
+        if (e === null) e = s;
+        if (e < s) { const x = s; s = e; e = x; }
+        return { s, e };
+    };
+    const actRange = id => {
+        const t = timelines[id] || {};
+        let s = parseISO(t.actStart), e = parseISO(t.actEnd);
+        if (s === null && e === null) return null;
+        if (s === null) s = e;
+        if (e === null) { const today = parseISO(todayISO()); e = s < today ? today : s; }
+        if (e < s) { const x = s; s = e; e = x; }
+        return { s, e };
+    };
+    return { rows, byId, preds, planRange, actRange };
+}
+
+function sectionMapByRow() {
+    const map = {};
+    const stack = [];
+    items.forEach(i => {
+        while (stack.length && stack[stack.length - 1].level >= i.level) stack.pop();
+        if (i.type === 'headline') { stack.push({ level: i.level, title: i.title || '(Untitled section)' }); return; }
+        map[String(i.id)] = stack.length ? stack.map(x => x.title).join(' › ') : '(Ungrouped items)';
+    });
+    budgetExtras.forEach(e => { map[String(e.id)] = 'Additional budget lines'; });
+    return map;
+}
+
+function milestoneDate(m, ctx) {
+    if (m.follow && m.taskId) {
+        const r = ctx.planRange(m.taskId);
+        if (r) return isoOf(r.e);
+    }
+    return m.date || '';
+}
+
+function dependencyInfo(ctx, id) {
+    const pr = ctx.preds(id);
+    const mine = ctx.planRange(id);
+    const labels = pr.map(p => ctx.byId[p].wbsCode || shortLabel(ctx.byId[p].description, 20));
+    const conflicts = [];
+    if (mine) {
+        pr.forEach(p => {
+            const r = ctx.planRange(p);
+            if (r && mine.s <= r.e) conflicts.push({ pred: p, days: Math.round((r.e - mine.s) / DAY_MS) + 1 });
+        });
+    }
+    return { preds: pr, labels, conflicts };
+}
+
+function wouldCreateCycle(ctx, succId, predId) {
+    if (String(succId) === String(predId)) return true;
+    const seen = new Set();
+    const stack = [String(predId)];
+    while (stack.length) {
+        const cur = stack.pop();
+        if (cur === String(succId)) return true;
+        if (seen.has(cur)) continue;
+        seen.add(cur);
+        ctx.preds(cur).forEach(p => stack.push(p));
+    }
+    return false;
+}
+
+function addPredecessor(id, predId) {
+    if (!predId) return;
+    const ctx = scheduleContext();
+    if (wouldCreateCycle(ctx, id, predId)) { alert('That link would create a circular dependency.'); renderSchedule(); return; }
+    if (!timelines[id]) timelines[id] = {};
+    if (!Array.isArray(timelines[id].preds)) timelines[id].preds = [];
+    if (!timelines[id].preds.map(String).includes(String(predId))) timelines[id].preds.push(String(predId));
+    renderSchedule();
+    scheduleSave();
+}
+
+function removePredecessor(id, predId) {
+    const t = timelines[id];
+    if (!t || !Array.isArray(t.preds)) return;
+    t.preds = t.preds.filter(p => String(p) !== String(predId));
+    renderSchedule();
+    scheduleSave();
+}
+
+function autoScheduleDependents() {
+    const ctx = scheduleContext();
+    const done = new Set(), visiting = new Set();
+    const order = [];
+    const visit = id => {
+        id = String(id);
+        if (done.has(id) || visiting.has(id)) return;
+        visiting.add(id);
+        ctx.preds(id).forEach(visit);
+        visiting.delete(id);
+        done.add(id);
+        order.push(id);
+    };
+    ctx.rows.forEach(r => visit(r.id));
+
+    let shifted = 0;
+    order.forEach(id => {
+        const pr = ctx.preds(id);
+        if (!pr.length) return;
+        const mine = ctx.planRange(id);
+        if (!mine) return;
+        let need = null;
+        pr.forEach(p => { const r = ctx.planRange(p); if (r && (need === null || r.e + DAY_MS > need)) need = r.e + DAY_MS; });
+        if (need !== null && mine.s < need) {
+            const delta = need - mine.s;
+            if (!timelines[id]) timelines[id] = {};
+            timelines[id].planStart = isoOf(mine.s + delta);
+            timelines[id].planEnd = isoOf(mine.e + delta);
+            shifted++;
+        }
+    });
+
+    const msg = document.getElementById('ganttMsg');
+    if (msg) msg.textContent = shifted ? `Shifted ${shifted} task${shifted > 1 ? 's' : ''} to start after their predecessors.` : 'All dependencies already satisfied — nothing to shift.';
+    renderTimelineSection();
+    renderDashboard();
+    scheduleSave();
+}
+
+function addScheduleMilestone() {
+    scheduleMilestones.push({ id: 'ms_' + (itemCounter++), name: '', date: '', taskId: '', follow: false, done: false });
+    renderSchedule();
+    scheduleSave();
+}
+
+function deleteScheduleMilestone(id) {
+    scheduleMilestones = scheduleMilestones.filter(m => m.id !== id);
+    renderSchedule();
+    scheduleSave();
+}
+
+function updateScheduleMilestone(id, field, value) {
+    const m = scheduleMilestones.find(x => x.id === id);
+    if (!m) return;
+    m[field] = value;
+    renderSchedule();
+    scheduleSave();
+}
+
+function drawGantt(ctx) {
+    const el = document.getElementById('ganttChart');
+    if (!el) return;
+    const groupBy = document.getElementById('ganttGroupBy').value;
+    const zoom = parseFloat(document.getElementById('ganttZoom').value) || 1;
+    const showActual = document.getElementById('ganttShowActual').checked;
+
+    const secMap = sectionMapByRow();
+    const groups = [], gidx = {};
+    ctx.rows.forEach(r => {
+        const title = groupBy === 'category' ? (r.category || 'Other') : (secMap[String(r.id)] || '(Ungrouped items)');
+        if (!gidx[title]) { gidx[title] = { title, rows: [] }; groups.push(gidx[title]); }
+        gidx[title].rows.push(r);
+    });
+    const msList = scheduleMilestones.map(m => ({ m, date: milestoneDate(m, ctx) }));
+
+    const stamps = [];
+    ctx.rows.forEach(r => {
+        const p = ctx.planRange(r.id), a = ctx.actRange(r.id);
+        if (p) stamps.push(p.s, p.e);
+        if (a) stamps.push(a.s, a.e);
+    });
+    msList.forEach(x => { const t = parseISO(x.date); if (t !== null) stamps.push(t); });
+    if (!stamps.length) {
+        el.innerHTML = '<p style="color:var(--text-secondary); font-size:0.9rem;">No dates yet. Enter planned start/end dates in the table below (or on the Budget tab) and the Gantt chart will appear here.</p>';
+        return;
+    }
+
+    const minD = new Date(Math.min(...stamps)), maxD = new Date(Math.max(...stamps));
+    const t0 = Date.UTC(minD.getUTCFullYear(), minD.getUTCMonth(), 1);
+    const t1 = Date.UTC(maxD.getUTCFullYear(), maxD.getUTCMonth() + 1, 0);
+    const totalDays = Math.round((t1 - t0) / DAY_MS) + 1;
+    const labelW = 290, headH = 34, rowH = 28, chartW = Math.max(600, 1000 * zoom);
+    const pxDay = chartW / totalDays;
+    const X = ms => labelW + ((ms - t0) / DAY_MS) * pxDay;
+
+    const lay = [];
+    let y = headH;
+    if (msList.length) {
+        lay.push({ kind: 'msHead', y }); y += rowH;
+        msList.forEach(x => { lay.push({ kind: 'ms', y, x }); y += rowH; });
+    }
+    groups.forEach(g => {
+        lay.push({ kind: 'group', y, g }); y += rowH;
+        g.rows.forEach(r => { lay.push({ kind: 'task', y, r }); y += rowH; });
+    });
+    const H = y + 8, W = labelW + chartW + 16;
+
+    let svg = `<defs>
+        <marker id="arrOk" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#718096"/></marker>
+        <marker id="arrBad" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#E53E3E"/></marker>
+    </defs>`;
+
+    lay.forEach((L, i) => {
+        if (L.kind === 'task' && i % 2 === 0) svg += `<rect x="0" y="${L.y}" width="${W}" height="${rowH}" fill="rgba(0,0,0,0.025)"/>`;
+        if (L.kind === 'group') svg += `<rect x="0" y="${L.y}" width="${W}" height="${rowH}" fill="rgba(44,82,130,0.09)"/>`;
+        if (L.kind === 'msHead') svg += `<rect x="0" y="${L.y}" width="${W}" height="${rowH}" fill="rgba(237,137,54,0.12)"/>`;
+    });
+
+    svg += `<rect x="0" y="0" width="${W}" height="${headH}" fill="#EDF2F7"/>`;
+    const monthPx = pxDay * 30;
+    const everyN = Math.max(1, Math.ceil(46 / monthPx));
+    let cur = new Date(t0), mi = 0;
+    while (cur.getTime() <= t1) {
+        const x = X(cur.getTime());
+        svg += `<line x1="${x.toFixed(1)}" y1="0" x2="${x.toFixed(1)}" y2="${H}" stroke="var(--border)" stroke-width="1"/>`;
+        if (mi % everyN === 0) svg += `<text x="${(x + 4).toFixed(1)}" y="21" font-size="11" font-weight="600" fill="var(--text-secondary)">${MONTH_NAMES[cur.getUTCMonth()]} ${String(cur.getUTCFullYear()).slice(2)}</text>`;
+        cur = new Date(Date.UTC(cur.getUTCFullYear(), cur.getUTCMonth() + 1, 1));
+        mi++;
+    }
+    svg += `<line x1="${labelW}" y1="0" x2="${labelW}" y2="${H}" stroke="var(--text-secondary)" stroke-width="1"/>`;
+
+    const todayMs = parseISO(todayISO());
+    if (todayMs >= t0 && todayMs <= t1) {
+        const tx = X(todayMs) + pxDay / 2;
+        svg += `<line x1="${tx.toFixed(1)}" y1="${headH - 6}" x2="${tx.toFixed(1)}" y2="${H}" stroke="#E53E3E" stroke-width="1.4" stroke-dasharray="4,3"/>`;
+        svg += `<text x="${(tx + 3).toFixed(1)}" y="${headH - 8}" font-size="9" fill="#E53E3E">Today</text>`;
+    }
+
+    const pos = {};
+    lay.forEach(L => {
+        if (L.kind === 'msHead') {
+            svg += `<text x="8" y="${L.y + 18}" font-size="11.5" font-weight="700" fill="#7C2D12">◆ MILESTONES</text>`;
+        } else if (L.kind === 'ms') {
+            const { m, date } = L.x;
+            const t = parseISO(date);
+            svg += `<text x="18" y="${L.y + 18}" font-size="11" fill="var(--text-primary)"><title>${escapeHtml(m.name)}</title>${escapeHtml(shortLabel(m.name || '(unnamed milestone)', 38))}</text>`;
+            if (t !== null) {
+                const mx = X(t) + pxDay / 2, my = L.y + rowH / 2;
+                const fill = m.done ? '#38A169' : '#ED8936';
+                svg += `<polygon points="${mx - 7},${my} ${mx},${my - 8} ${mx + 7},${my} ${mx},${my + 8}" fill="${fill}" stroke="#1A202C" stroke-width="1"><title>${escapeHtml(m.name)} — ${date}${m.done ? ' (done)' : ''}</title></polygon>`;
+                svg += `<text x="${(mx + 11).toFixed(1)}" y="${my + 4}" font-size="10" fill="var(--text-secondary)">${date}</text>`;
+            } else {
+                svg += `<text x="${labelW + 8}" y="${L.y + 18}" font-size="10" fill="var(--text-secondary)">no date</text>`;
+            }
+        } else if (L.kind === 'group') {
+            svg += `<text x="8" y="${L.y + 18}" font-size="11.5" font-weight="700" fill="var(--primary-dark)"><title>${escapeHtml(L.g.title)}</title>${escapeHtml(shortLabel(L.g.title, 40))}</text>`;
+            let gs = null, ge = null;
+            L.g.rows.forEach(r => { const p = ctx.planRange(r.id); if (p) { gs = gs === null ? p.s : Math.min(gs, p.s); ge = ge === null ? p.e : Math.max(ge, p.e); } });
+            if (gs !== null) {
+                const xs = X(gs), xe = X(ge + DAY_MS);
+                svg += `<rect x="${xs.toFixed(1)}" y="${L.y + 10}" width="${Math.max(2, xe - xs).toFixed(1)}" height="7" fill="#1A365D"><title>${escapeHtml(L.g.title)}: ${isoOf(gs)} → ${isoOf(ge)}</title></rect>`;
+                svg += `<polygon points="${xs},${L.y + 17} ${xs + 5},${L.y + 17} ${xs},${L.y + 22}" fill="#1A365D"/><polygon points="${xe},${L.y + 17} ${xe - 5},${L.y + 17} ${xe},${L.y + 22}" fill="#1A365D"/>`;
+            }
+        } else if (L.kind === 'task') {
+            const r = L.r;
+            const p = ctx.planRange(r.id), a = ctx.actRange(r.id);
+            svg += `<text x="22" y="${L.y + 18}" font-size="11" fill="var(--text-primary)"><title>${escapeHtml(rowLabel(r))}</title>${escapeHtml(shortLabel(rowLabel(r), 40))}</text>`;
+            if (p) {
+                const xs = X(p.s), xe = X(p.e + DAY_MS);
+                const days = Math.round((p.e - p.s) / DAY_MS) + 1;
+                svg += `<rect x="${xs.toFixed(1)}" y="${L.y + 4}" width="${Math.max(3, xe - xs).toFixed(1)}" height="11" rx="3" fill="#2C5282" opacity="0.9"><title>${escapeHtml(rowLabel(r))}\nPlanned: ${isoOf(p.s)} → ${isoOf(p.e)} (${days} days)\nPlan cost: ${formatCurrency(r.planTotal)}</title></rect>`;
+                pos[String(r.id)] = { xs, xe, y: L.y + 9.5 };
+            } else {
+                svg += `<text x="${labelW + 8}" y="${L.y + 18}" font-size="10" fill="var(--text-secondary)">no planned dates</text>`;
+            }
+            if (showActual && a) {
+                const xs = X(a.s), xe = X(a.e + DAY_MS);
+                const late = p && a.e > p.e;
+                const open = !(timelines[r.id] || {}).actEnd;
+                svg += `<rect x="${xs.toFixed(1)}" y="${L.y + 17}" width="${Math.max(3, xe - xs).toFixed(1)}" height="7" rx="2" fill="${late ? '#E53E3E' : '#38A169'}" ${open ? 'opacity="0.65"' : ''}><title>${escapeHtml(rowLabel(r))}\nActual: ${isoOf(a.s)} → ${open ? 'in progress (to today)' : isoOf(a.e)}</title></rect>`;
+            }
+        }
+    });
+
+    ctx.rows.forEach(r => {
+        const succ = pos[String(r.id)];
+        if (!succ) return;
+        const info = dependencyInfo(ctx, r.id);
+        info.preds.forEach(pid => {
+            const pr = pos[pid];
+            if (!pr) return;
+            const bad = info.conflicts.some(c => c.pred === pid);
+            const x1 = pr.xe, y1 = pr.y, x2 = succ.xs, y2 = succ.y, xm = x1 + 6;
+            svg += `<path d="M ${x1.toFixed(1)} ${y1.toFixed(1)} H ${xm.toFixed(1)} V ${y2.toFixed(1)} H ${Math.max(x2, xm + 1).toFixed(1)}" fill="none" stroke="${bad ? '#E53E3E' : '#718096'}" stroke-width="1.3" marker-end="url(#${bad ? 'arrBad' : 'arrOk'})"/>`;
+        });
+    });
+
+    el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="max-width:none; display:block;">${svg}</svg>`;
+}
+
+function renderMilestonesTable(ctx) {
+    const tbody = document.getElementById('milestoneTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    scheduleMilestones.forEach(m => {
+        const follows = m.follow && m.taskId && ctx.planRange(m.taskId);
+        const date = milestoneDate(m, ctx);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="text" value="${escapeAttr(m.name)}" placeholder="e.g. Design approved" onchange="updateScheduleMilestone('${m.id}','name',this.value)"></td>
+            <td>
+                <select onchange="updateScheduleMilestone('${m.id}','taskId',this.value)">
+                    <option value="">— (none)</option>
+                    ${ctx.rows.map(r => `<option value="${escapeAttr(r.id)}" ${String(m.taskId) === String(r.id) ? 'selected' : ''}>${escapeHtml(shortLabel(rowLabel(r), 46))}</option>`).join('')}
+                </select>
+            </td>
+            <td><input type="date" value="${date}" ${follows ? 'disabled' : ''} onchange="updateScheduleMilestone('${m.id}','date',this.value)"></td>
+            <td style="text-align:center;"><input type="checkbox" style="width:auto;" ${m.follow ? 'checked' : ''} ${m.taskId ? '' : 'disabled'} onchange="updateScheduleMilestone('${m.id}','follow',this.checked)"></td>
+            <td style="text-align:center;"><input type="checkbox" style="width:auto;" ${m.done ? 'checked' : ''} onchange="updateScheduleMilestone('${m.id}','done',this.checked)"></td>
+            <td><button class="delete-btn" onclick="deleteScheduleMilestone('${m.id}')">✕</button></td>`;
+        tbody.appendChild(tr);
+    });
+    if (!scheduleMilestones.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="color:var(--text-secondary); padding:0.9rem;">No milestones yet — click “+ Add Milestone”.</td></tr>';
+    }
+}
+
+function renderDependencyTable(ctx) {
+    const tbody = document.getElementById('dependencyTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    let depCount = 0, conflictList = [];
+    ctx.rows.forEach(r => {
+        const tl = timelines[r.id] || {};
+        const info = dependencyInfo(ctx, r.id);
+        depCount += info.preds.length;
+        info.conflicts.forEach(c => conflictList.push(`${rowLabel(r)} starts ${c.days} day${c.days > 1 ? 's' : ''} before “${rowLabel(ctx.byId[c.pred])}” finishes`));
+        const range = ctx.planRange(r.id);
+        const dur = range ? Math.round((range.e - range.s) / DAY_MS) + 1 : '';
+        const chips = info.preds.map((p, i) => `<span class="chip">${escapeHtml(info.labels[i])}<button title="Remove link" onclick="removePredecessor('${r.id}','${p}')">×</button></span>`).join('');
+        const options = ctx.rows
+            .filter(o => String(o.id) !== String(r.id) && !info.preds.includes(String(o.id)) && !wouldCreateCycle(ctx, r.id, o.id))
+            .map(o => `<option value="${escapeAttr(o.id)}">${escapeHtml(shortLabel(rowLabel(o), 44))}</option>`).join('');
+        const status = info.conflicts.length
+            ? `<span class="variance-neg">⚠ starts ${Math.max(...info.conflicts.map(c => c.days))}d too early</span>`
+            : (info.preds.length ? '<span class="variance-pos">✓ OK</span>' : '—');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><span style="font-family:var(--font-num);">${escapeHtml(r.wbsCode || '—')}</span></td>
+            <td>${escapeHtml(r.description || '(untitled)')}</td>
+            <td><input type="date" value="${tl.planStart || ''}" onchange="updateTimeline('${r.id}','planStart',this.value)"></td>
+            <td><input type="date" value="${tl.planEnd || ''}" onchange="updateTimeline('${r.id}','planEnd',this.value)"></td>
+            <td class="calc-cell">${dur === '' ? '—' : dur + 'd'}</td>
+            <td>${chips}<select class="pred-select" onchange="addPredecessor('${r.id}',this.value)"><option value="">+ add predecessor…</option>${options}</select></td>
+            <td style="font-size:0.8rem; white-space:nowrap;">${status}</td>`;
+        tbody.appendChild(tr);
+    });
+
+    const sum = document.getElementById('ganttSummary');
+    if (sum) {
+        if (conflictList.length) sum.innerHTML = `<div class="warn-box" style="margin:0 0 1rem;">⚠️ ${conflictList.length} dependency conflict${conflictList.length > 1 ? 's' : ''} (shown as red arrows):<br>${conflictList.map(escapeHtml).join('<br>')}<br><em>Use “Fix dependency conflicts” to shift those tasks automatically.</em></div>`;
+        else if (depCount) sum.innerHTML = `<div class="info-box" style="margin:0 0 1rem;">✓ All ${depCount} dependenc${depCount > 1 ? 'ies are' : 'y is'} satisfied (each task starts after its predecessors finish).</div>`;
+        else sum.innerHTML = '<p style="color:var(--text-secondary); font-size:0.85rem; margin-bottom:1rem;">No dependencies yet — add predecessors in the table below the chart. Arrows run from a predecessor’s finish to the successor’s start.</p>';
+    }
+}
+
+function renderSchedule() {
+    if (!document.getElementById('ganttChart')) return;
+    const ctx = scheduleContext();
+    drawGantt(ctx);
+    renderMilestonesTable(ctx);
+    renderDependencyTable(ctx);
+}
+
+// ---------------- Persistence: localStorage ----------------
+function scheduleSave() {
+    const dot = document.getElementById('saveDot');
+    const text = document.getElementById('saveText');
+    if (dot) dot.style.background = '#ED8936';
+    if (text) text.textContent = 'Saving…';
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+        saveToLocalStorage();
+        if (dot) dot.style.background = '#38A169';
+        if (text) text.textContent = 'Saved locally';
+    }, 500);
+}
+
+function collectState() {
+    return {
+        version: 1,
+        meta: {
+            projectName: document.getElementById('projectName').value,
+            clientName: document.getElementById('clientName').value,
+            preparedBy: document.getElementById('preparedBy').value,
+            projectDate: document.getElementById('projectDate').value,
+            currency: document.getElementById('currency').value,
+            description: document.getElementById('projectDescription').value,
+            budgetNotes: document.getElementById('budgetNotes').value,
+        },
+        assumptions: {
+            riskLow: document.getElementById('riskLow').value,
+            riskMedium: document.getElementById('riskMedium').value,
+            riskHigh: document.getElementById('riskHigh').value,
+            riskCritical: document.getElementById('riskCritical').value,
+            contingency: document.getElementById('contingency').value,
+            profitMargin: document.getElementById('profitMargin').value,
+        },
+        budgetMeta: {
+            revenueValue: document.getElementById('revenueValue').value,
+        },
+        timelineMeta: {
+            projectStart: document.getElementById('projStart').value,
+            projectEnd: document.getElementById('projEnd').value,
+        },
+        items, budgetExtras, actuals, incomeMilestones, timelines, scheduleMilestones, itemCounter
+    };
+}
+
+function applyState(state) {
+    if (!state) return;
+    document.getElementById('projectName').value = state.meta?.projectName || '';
+    document.getElementById('clientName').value = state.meta?.clientName || '';
+    document.getElementById('preparedBy').value = state.meta?.preparedBy || '';
+    if (state.meta?.projectDate) document.getElementById('projectDate').value = state.meta.projectDate;
+    document.getElementById('projectDescription').value = state.meta?.description || '';
+    document.getElementById('budgetNotes').value = state.meta?.budgetNotes || '';
+    const legacyLabel = (state.budgetMeta?.currencyLabel || '').toUpperCase();
+    document.getElementById('currency').value = state.meta?.currency || (CURRENCY_SYMBOLS[legacyLabel] ? legacyLabel : 'USD');
+
+    if (state.assumptions) {
+        document.getElementById('riskLow').value = state.assumptions.riskLow ?? 1.05;
+        document.getElementById('riskMedium').value = state.assumptions.riskMedium ?? 1.15;
+        document.getElementById('riskHigh').value = state.assumptions.riskHigh ?? 1.25;
+        document.getElementById('riskCritical').value = state.assumptions.riskCritical ?? 1.40;
+        document.getElementById('contingency').value = state.assumptions.contingency ?? 10;
+        document.getElementById('profitMargin').value = state.assumptions.profitMargin ?? 20;
+    }
+    if (state.budgetMeta) {
+        document.getElementById('revenueValue').value = state.budgetMeta.revenueValue ?? 0;
+    }
+
+    items = state.items || [];
+    budgetExtras = state.budgetExtras || [];
+    actuals = state.actuals || {};
+    incomeMilestones = state.incomeMilestones || [];
+    incomeMilestones.forEach(m => {
+        if (m.linkId === undefined) {
+            const it = items.find(i => i.type === 'line' && i.wbsCode && i.wbsCode === m.wbsCode);
+            const ex = budgetExtras.find(e => e.wbsCode && e.wbsCode === m.wbsCode);
+            m.linkId = it ? String(it.id) : (ex ? String(ex.id) : '');
+        }
+    });
+    timelines = state.timelines || {};
+    scheduleMilestones = state.scheduleMilestones || [];
+    document.getElementById('projStart').value = state.timelineMeta?.projectStart || '';
+    document.getElementById('projEnd').value = state.timelineMeta?.projectEnd || '';
+    itemCounter = state.itemCounter || (items.length + 1);
+
+    renderItems();
+    calculate();
+}
+
+function saveToLocalStorage() {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState()));
+    } catch (e) {
+        console.warn('Could not save to localStorage', e);
+    }
+}
+
+function loadFromLocalStorage() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return false;
+        applyState(JSON.parse(raw));
+        return true;
+    } catch (e) {
+        console.warn('Could not load from localStorage', e);
+        return false;
+    }
+}
+
+// ---------------- Project file export/import ----------------
+async function exportProjectJSON() {
+    const state = collectState();
+    const json = JSON.stringify(state, null, 2);
+    const name = (document.getElementById('projectName').value || 'ProjectPilot_Project').replace(/[^a-z0-9_\- ]/gi, '').trim() || 'ProjectPilot_Project';
+    const suggestedName = `${name}_${new Date().toISOString().split('T')[0]}.json`;
+
+    if (window.showSaveFilePicker) {
+        try {
+            const handle = await window.showSaveFilePicker({
+                suggestedName,
+                types: [{ description: 'ProjectPilot Project File', accept: { 'application/json': ['.json'] } }]
+            });
+            const writable = await handle.createWritable();
+            await writable.write(json);
+            await writable.close();
+            return;
+        } catch (err) {
+            if (err && err.name === 'AbortError') return;
+            console.warn('Save As dialog unavailable, falling back to default download.', err);
+        }
+    }
+
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = suggestedName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function importProjectJSON(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            const state = JSON.parse(e.target.result);
+            applyState(state);
+            scheduleSave();
+        } catch (err) {
+            alert('Could not read this project file. Make sure it is a .json file saved from this tool.');
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+}
+
+// ---------------- Excel export ----------------
+function exportToExcel() {
+    const wb = XLSX.utils.book_new();
+    const contingencyPct = parseFloat(document.getElementById('contingency').value) || 0;
+    const profitPct = parseFloat(document.getElementById('profitMargin').value) || 0;
+
+    // --- Line Items (Pricing) ---
+    const secStack = [];
+    const itemsData = [
+        ['WBS', 'Level', 'Section', 'Category', 'Description', 'Unit', 'Quantity', 'Unit Cost', 'Base Cost', 'Risk Level', 'Risk Factor', 'Subtotal']
+    ];
+    items.forEach((item, idx) => {
+        if (item.type === 'headline') {
+            secStack.length = item.level - 1;
+            secStack.push(item.title);
+            itemsData.push([item.wbsCode, item.level, item.level === 1 ? String(item.title).toUpperCase() : item.title, '', '', '', '', '', '', '', '', groupSubtotal(idx)]);
+            return;
+        }
+        const baseCost = item.quantity * item.unitCost;
+        const riskFactor = getRiskFactor(item.risk);
+        itemsData.push([item.wbsCode, item.level, secStack.slice(0, item.level - 1).join(' › '), item.category, item.description, item.unit, item.quantity, item.unitCost, baseCost, item.risk, riskFactor, baseCost * riskFactor]);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(itemsData), 'Pricing - Line Items');
+
+    // --- Pricing Summary ---
+    const lineItems = items.filter(i => i.type !== 'headline');
+    const baseCost = lineItems.reduce((s, i) => s + i.quantity * i.unitCost, 0);
+    const riskAdjustedCost = lineItems.reduce((s, i) => s + i.quantity * i.unitCost * getRiskFactor(i.risk), 0);
+    const contingencyAmount = riskAdjustedCost * (contingencyPct / 100);
+    const totalCost = riskAdjustedCost + contingencyAmount;
+    const profitAmount = totalCost * (profitPct / 100);
+    const totalPrice = totalCost + profitAmount;
+
+    const summaryData = [
+        ['TENDER PRICING SUMMARY'], [],
+        ['Project Name:', document.getElementById('projectName').value],
+        ['Client:', document.getElementById('clientName').value],
+        ['Prepared By:', document.getElementById('preparedBy').value],
+        ['Date:', document.getElementById('projectDate').value],
+        ['Currency:', document.getElementById('currency').value],
+        ['Project description:', document.getElementById('projectDescription').value],
+        ['Budget notes:', document.getElementById('budgetNotes').value], [],
+        ['COST BREAKDOWN'],
+        ['Base Cost', baseCost],
+        ['Risk-Adjusted Cost', riskAdjustedCost],
+        ['Contingency Reserve', contingencyAmount],
+        ['Total Cost', totalCost], [],
+        ['PRICING & MARGINS'],
+        ['Profit Margin %', profitPct / 100],
+        ['Profit Amount', profitAmount],
+        ['TOTAL TENDER PRICE', totalPrice]
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryData), 'Pricing - Summary');
+
+    // --- Pricing by Section (Headline) ---
+    const sectionData = [
+        ['WBS', 'Level', 'Section', '# Items', 'Base Cost', 'Risk-Adjusted Subtotal', '% of Total'],
+        ...computeSectionBreakdown().map(s => [s.wbsCode, s.level, s.title, s.itemCount, s.base, s.riskAdj, s.share / 100])
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sectionData), 'Pricing - By Section');
+
+    // --- Pricing by Unit (incl. profit) ---
+    const unitData = [
+        ['Unit', 'Total Qty', 'Base Cost', 'Risk-Adjusted Cost', 'Contingency', 'Profit', 'Total Price (incl. Profit)', '% of Total'],
+        ...computeUnitBreakdown().map(r => [r.unit, r.qty, r.base, r.riskAdj, r.contingency, r.profit, r.totalPrice, r.share / 100])
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(unitData), 'Pricing - By Unit');
+
+    // --- Budget Plan vs Actual ---
+    const rows = allBudgetRows();
+    const budgetData = [['WBS', 'Level', 'Description', 'Category', 'Plan Qty', 'Plan Cost', 'Plan Total', 'Actual Qty', 'Actual Cost', 'Actual Total', 'Variance', '% Used']];
+    buildBudgetDisplay().forEach(e => {
+        if (e.kind === 'group') {
+            budgetData.push([e.wbsCode, e.level, e.title, '', '', '', e.planTotal, '', '', e.actualTotal, e.planTotal - e.actualTotal, e.planTotal > 0 ? e.actualTotal / e.planTotal : (e.actualTotal > 0 ? 1 : 0)]);
+        } else if (e.kind === 'sep') {
+            budgetData.push(['', '', e.title]);
+        } else {
+            const row = e.row;
+            const act = actuals[row.id] || { qty: 0, cost: 0 };
+            const actualTotal = act.qty * act.cost;
+            const pctUsed = row.planTotal > 0 ? (actualTotal / row.planTotal) : (actualTotal > 0 ? 1 : 0);
+            budgetData.push([row.wbsCode, row.level, row.description, row.category, row.planQty, row.planCost, row.planTotal, act.qty, act.cost, actualTotal, row.planTotal - actualTotal, pctUsed]);
+        }
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(budgetData), 'Budget - Plan vs Actual');
+
+    // --- Budget Timeline ---
+    const tlData = [
+        ['WBS', 'Description', 'Plan Total', 'Plan Start', 'Plan End', 'Actual Total', 'Actual Start', 'Actual End', 'Schedule'],
+        ...rows.map(row => {
+            const tl = timelines[row.id] || {};
+            const act = actuals[row.id] || { qty: 0, cost: 0 };
+            const actTotal = act.qty * act.cost;
+            return [row.wbsCode, row.description, row.planTotal, tl.planStart || '', tl.planEnd || '', actTotal, tl.actStart || '', tl.actEnd || '', scheduleStatus(tl, actTotal).text];
+        })
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(tlData), 'Budget - Timeline');
+
+    // --- Monthly Cash Flow ---
+    const cfModel = computeCashflowModel();
+    const cfData = [
+        ['Month', 'Planned Cost', 'Actual Cost', 'Planned Cash In', 'Actual Cash In', 'Net Planned', 'Net Actual', 'Cum. Planned Cost', 'Cum. Actual Cost', 'Cum. Planned Cash In', 'Cum. Actual Cash In', 'Cum. Net Planned', 'Cum. Net Actual'],
+        ...cfModel.months.map(m => [m.key, m.plannedCost, m.actualCost, m.plannedIn, m.actualIn, m.netPlanned, m.netActual, m.cumPlannedCost, m.cumActualCost === null ? '' : m.cumActualCost, m.cumPlannedIn, m.cumActualIn === null ? '' : m.cumActualIn, m.cumNetPlanned, m.cumNetActual === null ? '' : m.cumNetActual])
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(cfData), 'Cash Flow - Monthly');
+
+    // --- Schedule: dependencies & milestones ---
+    const sctx = scheduleContext();
+    const depData = [
+        ['WBS', 'Item', 'Plan Start', 'Plan End', 'Duration (days)', 'Predecessors', 'Status'],
+        ...sctx.rows.map(r => {
+            const tl = timelines[r.id] || {};
+            const info = dependencyInfo(sctx, r.id);
+            const rg = sctx.planRange(r.id);
+            return [r.wbsCode, r.description, tl.planStart || '', tl.planEnd || '', rg ? Math.round((rg.e - rg.s) / DAY_MS) + 1 : '',
+                info.preds.map(p => rowLabel(sctx.byId[p])).join('; '),
+                info.conflicts.length ? 'Conflict: starts before predecessor finishes' : (info.preds.length ? 'OK' : '')];
+        })
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(depData), 'Schedule - Dependencies');
+    const msSheet = [
+        ['Milestone', 'Linked task', 'Date', 'Follows task end', 'Done'],
+        ...scheduleMilestones.map(m => [m.name, sctx.byId[String(m.taskId)] ? rowLabel(sctx.byId[String(m.taskId)]) : '', milestoneDate(m, sctx), m.follow ? 'Yes' : 'No', m.done ? 'Yes' : 'No'])
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(msSheet), 'Schedule - Milestones');
+
+    // --- Income & Revenue Milestones ---
+    const incomeData = [
+        ['WBS', 'Milestone / Description', 'Planned Amount', 'Planned Date', 'Actual Amount', 'Actual Date', 'Status', 'Variance'],
+        ...incomeMilestones.map(m => [
+            wbsCodeById(m.linkId), m.description, m.plannedAmount, m.plannedDate, m.actualAmount, m.actualDate, m.status,
+            (parseFloat(m.actualAmount) || 0) - (parseFloat(m.plannedAmount) || 0)
+        ])
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(incomeData), 'Income - Milestones');
+
+    // --- Dashboard / P&L ---
+    let planTotal = 0, actualTotal = 0, etc = 0;
+    rows.forEach(row => {
+        const act = actuals[row.id] || { qty: 0, cost: 0 };
+        const actualRowTotal = act.qty * act.cost;
+        planTotal += row.planTotal;
+        actualTotal += actualRowTotal;
+        if (actualRowTotal < row.planTotal) etc += (row.planTotal - actualRowTotal);
+    });
+    const incomeTotalsForExport = computeIncomeTotals();
+    const revenue = incomeMilestones.length > 0 ? incomeTotalsForExport.plannedTotal : (parseFloat(document.getElementById('revenueValue').value) || 0);
+    const actualRevenueReceived = incomeTotalsForExport.actualTotal;
+    const grossMargin = revenue - actualTotal;
+    const netCashPosition = actualRevenueReceived - actualTotal;
+
+    const plData = [
+        ['PROJECT DASHBOARD / P&L'], [],
+        ['Plan Total (Budget)', planTotal],
+        ['Actual Total', actualTotal],
+        ['Estimate to Complete (ETC)', etc],
+        ['Forecast Cost at Completion', actualTotal + etc], [],
+        ['Revenue (Planned/Contract)', revenue],
+        ['Gross Margin (Revenue - Actual)', grossMargin],
+        ['Gross Margin %', revenue > 0 ? grossMargin / revenue : 0], [],
+        ['CASH FLOW'],
+        ['Cash In (Actual Received)', actualRevenueReceived],
+        ['Cash Out (Actual Cost)', actualTotal],
+        ['Net Cash Position', netCashPosition],
+        ['Outstanding Receivables', incomeTotalsForExport.outstanding]
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(plData), 'Dashboard - P&L');
+
+    const name = (document.getElementById('projectName').value || 'ProjectPilot_Project').replace(/[^a-z0-9_\- ]/gi, '').trim() || 'ProjectPilot_Project';
+    XLSX.writeFile(wb, `${name}_${new Date().toISOString().split('T')[0]}.xlsx`);
+}
+
+function printSummary() { window.print(); }
+
+// ---------------- Utilities ----------------
+function escapeHtml(str) {
+    return String(str ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escapeAttr(str) { return escapeHtml(str); }
+
+// ---------------- Init ----------------
+window.addEventListener('beforeunload', saveToLocalStorage);
+
+(function init() {
+    const loaded = loadFromLocalStorage();
+    if (!loaded) initializeSampleData();
+    else { renderItems(); calculate(); }
+})();
+</script>
+</body>
+</html>

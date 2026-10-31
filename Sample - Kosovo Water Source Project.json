@@ -1,0 +1,452 @@
+{
+  "version": 1,
+  "meta": {
+    "projectName": "Kosovo Water Source Project",
+    "clientName": "",
+    "preparedBy": "Amit Epstein",
+    "projectDate": "2026-08-25",
+    "currency": "EUR"
+  },
+  "assumptions": {
+    "riskLow": "1.00",
+    "riskMedium": "1.00",
+    "riskHigh": "1.00",
+    "riskCritical": "1.00",
+    "contingency": "0",
+    "profitMargin": "66.67"
+  },
+  "budgetMeta": {
+    "revenueValue": "166850"
+  },
+  "items": [
+    {
+      "id": 0,
+      "type": "headline",
+      "title": "Professional services",
+      "level": 1
+    },
+    {
+      "id": 1,
+      "type": "line",
+      "wbsCode": "00.01.01",
+      "category": "Labor",
+      "description": "GIS / Technical Expert",
+      "unit": "Shift",
+      "quantity": 5,
+      "unitCost": 600,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 2,
+      "type": "line",
+      "wbsCode": "00.01.02",
+      "category": "Labor",
+      "description": "Revisions of report and workplan",
+      "unit": "Shift",
+      "quantity": 1,
+      "unitCost": 600,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 3,
+      "type": "line",
+      "wbsCode": "00.01.03",
+      "category": "Labor",
+      "description": "Meetings - Internal team",
+      "unit": "Hours",
+      "quantity": 0,
+      "unitCost": 60,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 4,
+      "type": "line",
+      "wbsCode": "00.01.04",
+      "category": "Labor",
+      "description": "Hydrology expert",
+      "unit": "Each",
+      "quantity": 1,
+      "unitCost": 20000,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 5,
+      "type": "headline",
+      "title": "Field surveys assistance",
+      "level": 1
+    },
+    {
+      "id": 6,
+      "type": "line",
+      "wbsCode": "00.02.01",
+      "category": "Labor",
+      "description": "Preparation of data collection application",
+      "unit": "Shift",
+      "quantity": 1,
+      "unitCost": 430,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 7,
+      "type": "line",
+      "wbsCode": "00.02.02",
+      "category": "Labor",
+      "description": "Data collection application deployment coordination with local team",
+      "unit": "Shift",
+      "quantity": 1,
+      "unitCost": 430,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 8,
+      "type": "line",
+      "wbsCode": "00.02.03",
+      "category": "Labor",
+      "description": "Data import, processing & integration",
+      "unit": "Shift",
+      "quantity": 1,
+      "unitCost": 430,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 9,
+      "type": "line",
+      "wbsCode": "00.02.04",
+      "category": "Labor",
+      "description": "GIS QA/QC and validation",
+      "unit": "Shift",
+      "quantity": 1,
+      "unitCost": 430,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 10,
+      "type": "headline",
+      "title": "GIS software licenses and database development",
+      "level": 1
+    },
+    {
+      "id": 11,
+      "type": "line",
+      "wbsCode": "00.03.01",
+      "category": "Labor",
+      "description": "GIS database & data model design and generation",
+      "unit": "Shift",
+      "quantity": 4,
+      "unitCost": 600,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 12,
+      "type": "line",
+      "wbsCode": "00.03.02",
+      "category": "Labor",
+      "description": "Data integration and analytics",
+      "unit": "Shift",
+      "quantity": 3,
+      "unitCost": 600,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 13,
+      "type": "line",
+      "wbsCode": "00.03.03",
+      "category": "Labor",
+      "description": "Database alignment to standards",
+      "unit": "Shift",
+      "quantity": 1,
+      "unitCost": 430,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 14,
+      "type": "line",
+      "wbsCode": "00.03.04",
+      "category": "Equipment",
+      "description": "GIS software licenses",
+      "unit": "Each",
+      "quantity": 1,
+      "unitCost": 12000,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 15,
+      "type": "headline",
+      "title": "Digital platform development and maintenance",
+      "level": 1
+    },
+    {
+      "id": 16,
+      "type": "line",
+      "wbsCode": "00.04.01",
+      "category": "Labor",
+      "description": "Web-GIS architecture & development",
+      "unit": "Shift",
+      "quantity": 20,
+      "unitCost": 430,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 17,
+      "type": "line",
+      "wbsCode": "00.04.02",
+      "category": "Labor",
+      "description": "Preparation of thematic maps, dashboard & analytics (Statistics, GIS)",
+      "unit": "Shift",
+      "quantity": 3,
+      "unitCost": 430,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 18,
+      "type": "line",
+      "wbsCode": "00.04.03",
+      "category": "Labor",
+      "description": "Deployment and user management",
+      "unit": "Shift",
+      "quantity": 1,
+      "unitCost": 430,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 19,
+      "type": "line",
+      "wbsCode": "00.04.04",
+      "category": "Labor",
+      "description": "Testing, optimization & acceptance",
+      "unit": "Shift",
+      "quantity": 1,
+      "unitCost": 430,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 20,
+      "type": "line",
+      "wbsCode": "00.04.05",
+      "category": "Training",
+      "description": "Documentation, manuals & training",
+      "unit": "Shift",
+      "quantity": 2,
+      "unitCost": 430,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 21,
+      "type": "line",
+      "wbsCode": "00.04.06",
+      "category": "Services",
+      "description": "Web-GIS maintenance and update",
+      "unit": "Months",
+      "quantity": 9,
+      "unitCost": 430,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 22,
+      "type": "headline",
+      "title": "Transportation and accommodation - Trip to Kosovo",
+      "level": 1
+    },
+    {
+      "id": 23,
+      "type": "line",
+      "wbsCode": "00.05.01",
+      "category": "Travel",
+      "description": "Flights",
+      "unit": "Each",
+      "quantity": 2,
+      "unitCost": 800,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 24,
+      "type": "line",
+      "wbsCode": "00.05.02",
+      "category": "Travel",
+      "description": "Hotels and allowance",
+      "unit": "Days",
+      "quantity": 10,
+      "unitCost": 220,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 25,
+      "type": "headline",
+      "title": "Preparation, publication and dissemination of reports",
+      "level": 1
+    },
+    {
+      "id": 26,
+      "type": "line",
+      "wbsCode": "00.06.01",
+      "category": "Labor",
+      "description": "Inception report",
+      "unit": "Shift",
+      "quantity": 3,
+      "unitCost": 600,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 27,
+      "type": "line",
+      "wbsCode": "00.06.02",
+      "category": "Labor",
+      "description": "Revisions of report and workplan",
+      "unit": "Shift",
+      "quantity": 1,
+      "unitCost": 600,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 28,
+      "type": "line",
+      "wbsCode": "00.06.03",
+      "category": "Labor",
+      "description": "Report preparation - system and data manual",
+      "unit": "Shift",
+      "quantity": 3,
+      "unitCost": 430,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 29,
+      "type": "line",
+      "wbsCode": "00.06.04",
+      "category": "Labor",
+      "description": "Statistical and analytical report",
+      "unit": "Shift",
+      "quantity": 3,
+      "unitCost": 430,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 30,
+      "type": "line",
+      "wbsCode": "00.06.05",
+      "category": "Labor",
+      "description": "Progress reports",
+      "unit": "Shift",
+      "quantity": 3,
+      "unitCost": 600,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 31,
+      "type": "headline",
+      "title": "Training workshops and stakeholder meetings",
+      "level": 1
+    },
+    {
+      "id": 32,
+      "type": "line",
+      "wbsCode": "00.07.01",
+      "category": "Training",
+      "description": "Workshop in Kosovo - preparation",
+      "unit": "Shift",
+      "quantity": 3,
+      "unitCost": 600,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 33,
+      "type": "line",
+      "wbsCode": "00.07.02",
+      "category": "Training",
+      "description": "Training, workshops and presentations in Kosovo",
+      "unit": "Shift",
+      "quantity": 5,
+      "unitCost": 600,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 34,
+      "type": "headline",
+      "title": "Administrative and operational expenses",
+      "level": 1
+    },
+    {
+      "id": 35,
+      "type": "line",
+      "wbsCode": "00.08.01",
+      "category": "Labor",
+      "description": "Project coordinator",
+      "unit": "Months",
+      "quantity": 18,
+      "unitCost": 600,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 36,
+      "type": "line",
+      "wbsCode": "00.08.02",
+      "category": "Services",
+      "description": "Marketing commissions",
+      "unit": "Each",
+      "quantity": 1,
+      "unitCost": 5000,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 37,
+      "type": "line",
+      "wbsCode": "00.08.03",
+      "category": "Services",
+      "description": "Accounting",
+      "unit": "Each",
+      "quantity": 1,
+      "unitCost": 1500,
+      "risk": "Medium",
+      "level": 2
+    },
+    {
+      "id": 38,
+      "type": "headline",
+      "title": "Unexpected",
+      "level": 1
+    },
+    {
+      "id": 39,
+      "type": "line",
+      "wbsCode": "00.09.01",
+      "category": "Other",
+      "description": "Various / unexpected expenses",
+      "unit": "Each",
+      "quantity": 1,
+      "unitCost": 10000,
+      "risk": "Medium",
+      "level": 2
+    }
+  ],
+  "budgetExtras": [],
+  "actuals": {},
+  "itemCounter": 40
+}
